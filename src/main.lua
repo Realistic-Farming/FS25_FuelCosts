@@ -28,6 +28,7 @@ source(modDirectory .. "src/settings/SettingsManager.lua")
 -- -------------------------------------------------------
 source(modDirectory .. "src/FuelPriceEngine.lua")
 source(modDirectory .. "src/FuelHUD.lua")
+source(modDirectory .. "src/ui/FuelSettingsPanel.lua")
 
 -- -------------------------------------------------------
 -- Phase 4 — Network
@@ -68,7 +69,7 @@ local function loadedMission(mission, node)
     fcm:init()
     fcm:registerConsoleCommands()
     if g_client ~= nil and g_server == nil then
-        g_currentMission:sendEvent(FuelRequestSyncEvent.new())
+        g_client:getServerConnection():sendEvent(FuelRequestSyncEvent.new())
     end
 end
 
@@ -103,6 +104,9 @@ FSBaseMission.draw = Utils.appendedFunction(FSBaseMission.draw, function(mission
     if fcm and fcm.hud then
         fcm.hud:draw()
     end
+    if fcm and fcm.settingsPanel then
+        fcm.settingsPanel:draw()
+    end
 end)
 
 -- -------------------------------------------------------
@@ -119,6 +123,95 @@ if FSCareerMissionInfo and FSCareerMissionInfo.saveToXMLFile then
             if fcm then fcm:save() end
         end
     )
+end
+
+-- -------------------------------------------------------
+-- Mouse event handler — settings panel eats input when open
+-- -------------------------------------------------------
+local fcMouseHandler = {}
+function fcMouseHandler:mouseEvent(posX, posY, isDown, isUp, button, eventUsed)
+    if fcm and fcm.settingsPanel and fcm.settingsPanel:isOpen() then
+        local consumed = fcm.settingsPanel:onMouseEvent(posX, posY, isDown, isUp, button, eventUsed)
+        return consumed or eventUsed
+    end
+    return eventUsed
+end
+addModEventListener(fcMouseHandler)
+
+-- -------------------------------------------------------
+-- Input action registration — Shift+F opens settings panel
+-- Hook PlayerInputComponent.registerActionEvents so our
+-- action is registered whenever the player spawns/respawns.
+-- -------------------------------------------------------
+if PlayerInputComponent and PlayerInputComponent.registerActionEvents then
+    local _originalRegister = PlayerInputComponent.registerActionEvents
+    PlayerInputComponent.registerActionEvents = function(inputComponent, ...)
+        _originalRegister(inputComponent, ...)
+
+        if not (g_inputBinding and g_FuelCostsManager and g_FuelCostsManager.settingsPanel) then
+            return
+        end
+        if g_FuelCostsManager.settingsPanelEventId then return end
+
+        g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
+
+        local ok, evId = g_inputBinding:registerActionEvent(
+            InputAction.FC_OPEN_SETTINGS,
+            g_FuelCostsManager,
+            g_FuelCostsManager.onOpenSettingsInput,
+            false, true, false, true
+        )
+        if ok and evId then
+            g_FuelCostsManager.settingsPanelEventId = evId
+            g_inputBinding:setActionEventTextVisibility(evId, false)
+            FuelLogger.info("Settings panel (Shift+F) registered in PLAYER context")
+        end
+
+        g_inputBinding:endActionEventsModification()
+    end
+    FuelLogger.info("PlayerInputComponent hook installed for FC_OPEN_SETTINGS")
+end
+
+-- -------------------------------------------------------
+-- Vehicle context — hook InputBinding.endActionEventsModification
+-- (Vehicle.registerActionEvents is already copied to each instance
+--  at spawn time and can't be patched after vehicles exist.)
+-- -------------------------------------------------------
+if InputBinding and InputBinding.endActionEventsModification then
+    local _fcVehicleHookActive = false
+    local _originalEndMod = InputBinding.endActionEventsModification
+    InputBinding.endActionEventsModification = function(binding, ignoreCheck)
+        local contextName = ""
+        if binding.registrationContext and
+           binding.registrationContext ~= InputBinding.NO_REGISTRATION_CONTEXT then
+            contextName = binding.registrationContext.name or ""
+        end
+
+        _originalEndMod(binding, ignoreCheck)
+
+        if contextName ~= Vehicle.INPUT_CONTEXT_NAME then return end
+        if _fcVehicleHookActive then return end
+        if not (g_FuelCostsManager and g_FuelCostsManager.settingsPanel) then return end
+
+        _fcVehicleHookActive = true
+        binding:beginActionEventsModification(Vehicle.INPUT_CONTEXT_NAME)
+
+        local ok, evId = binding:registerActionEvent(
+            InputAction.FC_OPEN_SETTINGS,
+            g_FuelCostsManager,
+            g_FuelCostsManager.onOpenSettingsInput,
+            false, true, false, true
+        )
+        if ok and evId then
+            g_FuelCostsManager.vehicleSettingsPanelEventId = evId
+            binding:setActionEventTextVisibility(evId, false)
+            FuelLogger.info("Settings panel (Shift+F) registered in VEHICLE context")
+        end
+
+        binding:endActionEventsModification()
+        _fcVehicleHookActive = false
+    end
+    FuelLogger.info("InputBinding hook installed for VEHICLE context")
 end
 
 print("========================================")

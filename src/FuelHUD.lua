@@ -16,7 +16,15 @@ local COLOR = {
     expensive = { 0.95, 0.35, 0.35, 1.0 },
     bg        = { 0.05, 0.05, 0.05, 0.75 },
     label     = { 0.70, 0.70, 0.70, 1.0 },
+    notif_bg  = { 0.05, 0.06, 0.09, 0.90 },
+    notif_def = { 0.95, 0.80, 0.25, 1.0 },
 }
+
+local NOTIF_W     = 0.220
+local NOTIF_H     = 0.036
+local NOTIF_X     = 0.390   -- centered-ish
+local NOTIF_Y     = 0.060
+local NOTIF_TS    = 0.014
 
 function FuelHUD.new(settings, priceEngine)
     local self = setmetatable({}, FuelHUD)
@@ -29,6 +37,8 @@ function FuelHUD.new(settings, priceEngine)
     self.isDragging  = false
     self.dragOffX    = 0
     self.dragOffY    = 0
+    self.flashQueue  = {}
+    self.activeFlash = nil
     return self
 end
 
@@ -57,8 +67,11 @@ function FuelHUD:updatePosition()
 end
 
 function FuelHUD:draw()
-    if not self.settings.enabled or not self.settings.hudEnabled then return end
     if not self.initialized then return end
+
+    self:drawFlash()
+
+    if not self.settings.enabled or not self.settings.hudEnabled then return end
 
     local C      = FuelConstants.HUD
     local price  = self.priceEngine:getDisplayPrice()
@@ -83,6 +96,59 @@ function FuelHUD:draw()
     setTextBold(true)
     renderText(self.posX + C.PADDING, self.posY + C.HEIGHT * 0.15, C.FONT_SIZE,
         string.format("$%.4f/L", price))
+end
+
+function FuelHUD:update(dt)
+    if self.activeFlash then
+        self.activeFlash.timer = self.activeFlash.timer + dt / 1000
+        if self.activeFlash.timer >= self.activeFlash.duration then
+            self.activeFlash = nil
+        end
+    end
+    if not self.activeFlash and #self.flashQueue > 0 then
+        self.activeFlash = table.remove(self.flashQueue, 1)
+    end
+end
+
+function FuelHUD:flash(message, color, duration)
+    table.insert(self.flashQueue, {
+        message  = message or "",
+        color    = color or COLOR.notif_def,
+        timer    = 0,
+        duration = duration or 4,
+    })
+end
+
+function FuelHUD:drawFlash()
+    if not self.activeFlash or not self.overlay then return end
+
+    local t = self.activeFlash.timer
+    local d = self.activeFlash.duration
+    local alpha = 1.0
+    if t < 0.25 then
+        alpha = t / 0.25
+    elseif t > d - 0.80 then
+        alpha = math.max(0, (d - t) / 0.80)
+    end
+
+    local pulse     = 0.75 + 0.25 * math.sin(t * 5)
+    local textAlpha = alpha * pulse
+    local c         = self.activeFlash.color
+
+    -- background
+    setOverlayColor(self.overlay,
+        COLOR.notif_bg[1], COLOR.notif_bg[2], COLOR.notif_bg[3], COLOR.notif_bg[4] * alpha)
+    renderOverlay(self.overlay, NOTIF_X, NOTIF_Y, NOTIF_W, NOTIF_H)
+
+    -- left accent bar
+    setOverlayColor(self.overlay, c[1], c[2], c[3], (c[4] or 1) * alpha)
+    renderOverlay(self.overlay, NOTIF_X, NOTIF_Y, 0.003, NOTIF_H)
+
+    -- message text
+    setTextColor(c[1], c[2], c[3], textAlpha)
+    setTextBold(true)
+    setTextAlignment(RenderText.ALIGN_LEFT)
+    renderText(NOTIF_X + 0.010, NOTIF_Y + NOTIF_H * 0.28, NOTIF_TS, self.activeFlash.message)
 end
 
 function FuelHUD:delete()

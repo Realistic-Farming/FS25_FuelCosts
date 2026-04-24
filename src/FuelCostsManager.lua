@@ -56,7 +56,6 @@ function FuelCostsManager:update(dt)
         end
     end
 
-    self.hud:draw()
 end
 
 function FuelCostsManager:delete()

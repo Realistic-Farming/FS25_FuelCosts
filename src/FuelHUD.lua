@@ -33,7 +33,11 @@ function FuelHUD.new(settings, priceEngine)
 end
 
 function FuelHUD:init()
-    -- TODO: create background overlay via Overlay.new() — verify API in LUADOC
+    if createImageOverlay ~= nil then
+        self.overlay = createImageOverlay("dataS/menu/base/graph_pixel.dds")
+    else
+        FuelLogger.warning("HUD: createImageOverlay not available — background will not render")
+    end
     self.initialized = true
     FuelLogger.info("HUD initialized")
 end
@@ -62,8 +66,10 @@ function FuelHUD:draw()
     local col    = COLOR[status] or COLOR.normal
 
     -- Background
-    setOverlayColor(self.overlay, COLOR.bg[1], COLOR.bg[2], COLOR.bg[3], COLOR.bg[4])
-    renderOverlay(self.overlay, self.posX, self.posY, C.WIDTH, C.HEIGHT)
+    if self.overlay then
+        setOverlayColor(self.overlay, COLOR.bg[1], COLOR.bg[2], COLOR.bg[3], COLOR.bg[4])
+        renderOverlay(self.overlay, self.posX, self.posY, C.WIDTH, C.HEIGHT)
+    end
 
     -- Label
     setTextColor(COLOR.label[1], COLOR.label[2], COLOR.label[3], COLOR.label[4])

@@ -41,6 +41,7 @@ source(g_currentModDirectory .. "src/FuelCostsManager.lua")
 -- -------------------------------------------------------
 
 Utils.appendedFunction(Mission00, "load", function(mission)
+    print("[FuelCosts] Mission00.load hook fired")
     local env = getfenv(0)
     env.g_FuelCostsManager = FuelCostsManager.new()
 end)

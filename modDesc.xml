@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="106">
     <author>TisonK</author>
-    <version>0.1.0.0</version>
+    <version>0.2.0.0</version>
     <modName>FS25_FuelCosts</modName>
     <title>
         <en>Realistic Fuel Costs</en>
@@ -90,6 +90,34 @@
             <id>SOLAR</id>
             <vi>DẦU DIESEL</vi>
         </text>
+        <text name="fc_notification_refueling">
+            <en>⛽ Refueling...</en>
+            <de>⛽ Betankung läuft...</de>
+            <fr>⛽ Ravitaillement...</fr>
+            <nl>⛽ Tanken...</nl>
+            <it>⛽ Rifornimento...</it>
+            <pl>⛽ Tankowanie...</pl>
+            <es>⛽ Repostando...</es>
+            <ea>⛽ Repostando...</ea>
+            <pt>⛽ Abastecendo...</pt>
+            <br>⛽ Abastecendo...</br>
+            <ru>⛽ Заправка...</ru>
+            <uk>⛽ Заправка...</uk>
+            <cz>⛽ Tankování...</cz>
+            <hu>⛽ Tankolás...</hu>
+            <ro>⛽ Alimentare...</ro>
+            <tr>⛽ Yakıt alınıyor...</tr>
+            <fi>⛽ Tankataan...</fi>
+            <no>⛽ Tanker...</no>
+            <sv>⛽ Tankar...</sv>
+            <da>⛽ Tanker...</da>
+            <kr>⛽ 주유 중...</kr>
+            <jp>⛽ 給油中...</jp>
+            <ct>⛽ 加油中...</ct>
+            <fc>⛽ 加油中...</fc>
+            <id>⛽ Mengisi bahan bakar...</id>
+            <vi>⛽ Đang đổ xăng...</vi>
+        </text>
         <text name="fc_notification_fill">
             <en>Fuelled %.0fL — $%.2f</en>
             <de>Betankt %.0fL — $%.2f</de>
@@ -146,8 +174,46 @@
             <id>Aktifkan biaya bahan bakar</id>
             <vi>Bật chi phí nhiên liệu</vi>
         </text>
+        <text name="input_FC_OPEN_SETTINGS">
+            <en>Open Fuel Costs Settings</en>
+            <de>Kraftstoffkosten-Einstellungen öffnen</de>
+            <fr>Ouvrir les paramètres des coûts de carburant</fr>
+            <nl>Brandstofkosteninstellingen openen</nl>
+            <it>Apri impostazioni costi carburante</it>
+            <pl>Otwórz ustawienia kosztów paliwa</pl>
+            <es>Abrir ajustes de costos de combustible</es>
+            <ea>Abrir ajustes de costos de combustible</ea>
+            <pt>Abrir configurações de custos de combustível</pt>
+            <br>Abrir configurações de custos de combustível</br>
+            <ru>Открыть настройки затрат на топливо</ru>
+            <uk>Відкрити налаштування витрат на пальне</uk>
+            <cz>Otevřít nastavení nákladů na palivo</cz>
+            <hu>Üzemanyagköltség beállítások megnyitása</hu>
+            <ro>Deschide setările costurilor de combustibil</ro>
+            <tr>Yakıt maliyeti ayarlarını aç</tr>
+            <fi>Avaa polttoainekustannusten asetukset</fi>
+            <no>Åpne innstillinger for drivstoffkostnader</no>
+            <sv>Öppna inställningar för bränslekostnader</sv>
+            <da>Åbn indstillinger for brændstofomkostninger</da>
+            <kr>연료 비용 설정 열기</kr>
+            <jp>燃料コスト設定を開く</jp>
+            <ct>開啟燃料成本設定</ct>
+            <fc>开启燃料成本设置</fc>
+            <id>Buka pengaturan biaya bahan bakar</id>
+            <vi>Mở cài đặt chi phí nhiên liệu</vi>
+        </text>
     </l10n>
-    <sourceFiles>
+    <extraSourceFiles>
         <sourceFile filename="src/main.lua" />
-    </sourceFiles>
+    </extraSourceFiles>
+
+    <actions>
+        <action name="FC_OPEN_SETTINGS" category="ONFOOT" />
+    </actions>
+
+    <inputBinding>
+        <actionBinding action="FC_OPEN_SETTINGS">
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_lshift KEY_f" />
+        </actionBinding>
+    </inputBinding>
 </modDesc>

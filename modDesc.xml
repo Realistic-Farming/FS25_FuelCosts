@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="106">
+    <author>TisonK</author>
+    <version>0.1.0.0</version>
+    <modName>FS25_FuelCosts</modName>
+    <title>
+        <en>Realistic Fuel Costs</en>
+        <de>Realistische Kraftstoffkosten</de>
+        <fr>Coûts de Carburant Réalistes</fr>
+        <nl>Realistische Brandstofkosten</nl>
+        <it>Costi del Carburante Realistici</it>
+        <pl>Realistyczne Koszty Paliwa</pl>
+        <es>Costos de Combustible Realistas</es>
+        <ea>Costos de Combustible Realistas</ea>
+        <pt>Custos de Combustível Realistas</pt>
+        <br>Custos de Combustível Realistas</br>
+        <ru>Реалистичные Затраты на Топливо</ru>
+        <uk>Реалістичні Витрати на Пальне</uk>
+        <cz>Realistické Náklady na Palivo</cz>
+        <hu>Reális Üzemanyagköltségek</hu>
+        <ro>Costuri Realiste de Combustibil</ro>
+        <tr>Gerçekçi Yakıt Maliyetleri</tr>
+        <fi>Realistiset Polttoainekustannukset</fi>
+        <no>Realistiske Drivstoffkostnader</no>
+        <sv>Realistiska Bränslekostnader</sv>
+        <da>Realistiske Brændstofomkostninger</da>
+        <kr>현실적인 연료 비용</kr>
+        <jp>リアルな燃料コスト</jp>
+        <ct>真實燃料成本</ct>
+        <fc>真实燃料成本</fc>
+        <id>Biaya Bahan Bakar Realistis</id>
+        <vi>Chi Phí Nhiên Liệu Thực Tế</vi>
+    </title>
+    <description>
+        <en>Diesel isn't free. Realistic Fuel Costs makes every litre count — fuel prices fluctuate daily based on market forces, seasons, and random supply shocks. Fill up when prices are low; plan your biggest field runs around the market. Configurable volatility, difficulty multipliers, and a live price HUD. Fully multiplayer with server-authoritative pricing.</en>
+        <de>Diesel ist nicht kostenlos. Realistische Kraftstoffkosten lässt jeden Liter zählen — Kraftstoffpreise schwanken täglich basierend auf Marktkräften, Jahreszeiten und zufälligen Versorgungsschocks. Tanken Sie, wenn die Preise niedrig sind; planen Sie Ihre größten Feldeinsätze rund um den Markt. Konfigurierbares Volatilität, Schwierigkeitsmultiplikatoren und ein Live-Preis-HUD. Vollständig multiplayer-fähig.</de>
+        <fr>Le diesel n'est pas gratuit. Les Coûts de Carburant Réalistes font compter chaque litre — les prix du carburant fluctuent quotidiennement selon les forces du marché, les saisons et les chocs d'approvisionnement aléatoires. Faites le plein quand les prix sont bas ; planifiez vos plus grands travaux aux champs en fonction du marché. Volatilité configurable, multiplicateurs de difficulté et HUD de prix en direct. Multijoueur complet.</fr>
+        <nl>Diesel is niet gratis. Realistische Brandstofkosten laat elke liter tellen — brandstofprijzen fluctueren dagelijks op basis van marktkrachten, seizoenen en willekeurige aanvoerschokken. Tank wanneer de prijzen laag zijn; plan uw grootste veldritten rond de markt. Configureerbare volatiliteit, moeilijkheidsgraadfactoren en een live prijs-HUD. Volledig multiplayer.</nl>
+        <it>Il diesel non è gratuito. I Costi del Carburante Realistici fanno contare ogni litro — i prezzi del carburante fluttuano quotidianamente in base alle forze di mercato, alle stagioni e a shock di approvvigionamento casuali. Rifornisci quando i prezzi sono bassi; pianifica i tuoi lavori più grandi in base al mercato. Volatilità configurabile, moltiplicatori di difficoltà e HUD prezzi in diretta. Multiplayer completo.</it>
+        <pl>Diesel nie jest darmowy. Realistyczne Koszty Paliwa sprawiają, że każdy litr ma znaczenie — ceny paliwa zmieniają się codziennie na podstawie sił rynkowych, pór roku i losowych szoków podażowych. Tankuj, gdy ceny są niskie; planuj największe prace polowe zgodnie z rynkiem. Konfigurowalna zmienność, mnożniki trudności i HUD z aktualną ceną. Pełna obsługa multiplayer.</pl>
+        <es>El diésel no es gratis. Los Costos de Combustible Realistas hacen que cada litro cuente — los precios del combustible fluctúan diariamente según las fuerzas del mercado, las estaciones y los shocks de suministro aleatorios. Llena el depósito cuando los precios sean bajos; planifica tus mayores trabajos de campo según el mercado. Volatilidad configurable, multiplicadores de dificultad y HUD de precio en vivo. Multijugador completo.</es>
+        <ea>El diésel no es gratis. Los Costos de Combustible Realistas hacen que cada litro cuente — los precios del combustible fluctúan diariamente según las fuerzas del mercado, las estaciones y los shocks de suministro aleatorios. Multijugador completo.</ea>
+        <pt>O diesel não é gratuito. Os Custos de Combustível Realistas fazem cada litro contar — os preços do combustível flutuam diariamente com base nas forças do mercado, nas estações e em choques de abastecimento aleatórios. Abasteça quando os preços estiverem baixos; planeje seus maiores trabalhos de campo em torno do mercado. Volatilidade configurável, multiplicadores de dificuldade e HUD de preço ao vivo. Multijogador completo.</pt>
+        <br>O diesel não é gratuito. Os Custos de Combustível Realistas fazem cada litro contar — os preços do combustível flutuam diariamente com base nas forças do mercado, nas estações e em choques de abastecimento aleatórios. Multijogador completo.</br>
+        <ru>Дизель не бесплатен. Реалистичные Затраты на Топливо делают каждый литр значимым — цены на топливо ежедневно колеблются под влиянием рыночных сил, сезонов и случайных перебоев в поставках. Заправляйтесь, когда цены низкие; планируйте крупные полевые работы с учётом рынка. Полная поддержка мультиплеера.</ru>
+        <uk>Дизель не безкоштовний. Реалістичні Витрати на Пальне роблять кожен літр значущим — ціни на пальне щодня коливаються під впливом ринкових сил, сезонів та випадкових перебоїв у поставках. Повна підтримка мультиплеєра.</uk>
+        <cz>Diesel není zdarma. Realistické Náklady na Palivo způsobují, že každý litr má cenu — ceny paliva každý den kolísají na základě tržních sil, ročních období a náhodných šoků nabídky. Plný multiplayer.</cz>
+        <hu>A dízel nem ingyenes. A Reális Üzemanyagköltségek minden litert számossá tesznek — az üzemanyagárak naponta ingadoznak a piaci erők, évszakok és véletlenszerű ellátási sokkok alapján. Teljes többjátékos támogatás.</hu>
+        <ro>Motorina nu este gratuită. Costurile Realiste de Combustibil fac fiecare litru să conteze — prețurile combustibilului fluctuează zilnic pe baza forțelor pieței, anotimpurilor și șocurilor aleatorii de aprovizionare. Multiplayer complet.</ro>
+        <tr>Dizel ücretsiz değil. Gerçekçi Yakıt Maliyetleri her litreyi önemli kılar — yakıt fiyatları piyasa güçlerine, mevsimlere ve rastgele tedarik şoklarına göre günlük olarak dalgalanır. Tam çok oyunculu destek.</tr>
+        <fi>Diesel ei ole ilmaista. Realistiset Polttoainekustannukset tekevät jokaisesta litrasta merkittävän — polttoaineen hinnat vaihtelevat päivittäin markkinavoiman, vuodenaikojen ja satunnaisten toimitusshokien perusteella. Täysi moninpelituki.</fi>
+        <no>Diesel er ikke gratis. Realistiske Drivstoffkostnader gjør hver liter viktig — drivstoffprisene svinger daglig basert på markedskrefter, årstider og tilfeldige forsyningssjokk. Full flerspillerstøtte.</no>
+        <sv>Diesel är inte gratis. Realistiska Bränslekostnader gör varje liter viktig — bränslepriserna varierar dagligen baserat på marknadskrafter, årstider och slumpmässiga försörjningschocker. Fullt flerspelsstöd.</sv>
+        <da>Diesel er ikke gratis. Realistiske Brændstofomkostninger gør hver liter vigtig — brændstofpriserne svinger dagligt baseret på markedskræfter, årstider og tilfældige forsyningschok. Fuld multiplayer-support.</da>
+        <kr>디젤은 무료가 아닙니다. 현실적인 연료 비용은 모든 리터를 중요하게 만듭니다 — 연료 가격은 시장 힘, 계절 및 무작위 공급 충격에 따라 매일 변동합니다. 완전한 멀티플레이어 지원.</kr>
+        <jp>ディーゼルは無料ではありません。リアルな燃料コストはすべてのリットルを重要にします — 燃料価格は市場の力、季節、ランダムな供給ショックに基づいて毎日変動します。完全マルチプレイヤー対応。</jp>
+        <ct>柴油不是免費的。真實燃料成本讓每一升都很重要 — 燃料價格每天根據市場力量、季節和隨機供應衝擊波動。完整多人遊戲支援。</ct>
+        <fc>柴油不是免费的。真实燃料成本让每一升都很重要 — 燃料价格每天根据市场力量、季节和随机供应冲击波动。完整多人游戏支持。</fc>
+        <id>Diesel tidak gratis. Biaya Bahan Bakar Realistis membuat setiap liter berarti — harga bahan bakar berfluktuasi setiap hari berdasarkan kekuatan pasar, musim, dan guncangan pasokan acak. Dukungan multiplayer penuh.</id>
+        <vi>Dầu diesel không miễn phí. Chi Phí Nhiên Liệu Thực Tế làm cho mỗi lít có giá trị — giá nhiên liệu biến động hàng ngày dựa trên lực lượng thị trường, mùa vụ và cú sốc nguồn cung ngẫu nhiên. Hỗ trợ đầy đủ nhiều người chơi.</vi>
+    </description>
+    <iconFilename>icon.dds</iconFilename>
+    <multiplayer supported="true" />
+    <l10n>
+        <text name="fc_hud_label">
+            <en>DIESEL</en>
+            <de>DIESEL</de>
+            <fr>DIESEL</fr>
+            <nl>DIESEL</nl>
+            <it>DIESEL</it>
+            <pl>DIESEL</pl>
+            <es>DIESEL</es>
+            <ea>DIESEL</ea>
+            <pt>DIESEL</pt>
+            <br>DIESEL</br>
+            <ru>ДИЗЕЛЬ</ru>
+            <uk>ДИЗЕЛЬ</uk>
+            <cz>DIESEL</cz>
+            <hu>DÍZEL</hu>
+            <ro>DIESEL</ro>
+            <tr>DİZEL</tr>
+            <fi>DIESEL</fi>
+            <no>DIESEL</no>
+            <sv>DIESEL</sv>
+            <da>DIESEL</da>
+            <kr>디젤</kr>
+            <jp>ディーゼル</jp>
+            <ct>柴油</ct>
+            <fc>柴油</fc>
+            <id>SOLAR</id>
+            <vi>DẦU DIESEL</vi>
+        </text>
+        <text name="fc_notification_fill">
+            <en>Fuelled %.0fL — $%.2f</en>
+            <de>Betankt %.0fL — $%.2f</de>
+            <fr>Ravitaillé %.0fL — $%.2f</fr>
+            <nl>Bijgetankt %.0fL — $%.2f</nl>
+            <it>Rifornito %.0fL — $%.2f</it>
+            <pl>Zatankowano %.0fL — $%.2f</pl>
+            <es>Repostado %.0fL — $%.2f</es>
+            <ea>Repostado %.0fL — $%.2f</ea>
+            <pt>Abastecido %.0fL — $%.2f</pt>
+            <br>Abastecido %.0fL — $%.2f</br>
+            <ru>Заправлено %.0fл — $%.2f</ru>
+            <uk>Заправлено %.0fл — $%.2f</uk>
+            <cz>Natankováno %.0fL — $%.2f</cz>
+            <hu>Feltöltve %.0fL — $%.2f</hu>
+            <ro>Alimentat %.0fL — $%.2f</ro>
+            <tr>Yakıt alındı %.0fL — $%.2f</tr>
+            <fi>Tankattu %.0fL — $%.2f</fi>
+            <no>Tanket %.0fL — $%.2f</no>
+            <sv>Tankat %.0fL — $%.2f</sv>
+            <da>Tanket %.0fL — $%.2f</da>
+            <kr>연료 보충 %.0fL — $%.2f</kr>
+            <jp>給油 %.0fL — $%.2f</jp>
+            <ct>加油 %.0fL — $%.2f</ct>
+            <fc>加油 %.0fL — $%.2f</fc>
+            <id>Diisi %.0fL — $%.2f</id>
+            <vi>Đã đổ xăng %.0fL — $%.2f</vi>
+        </text>
+        <text name="fc_setting_enabled">
+            <en>Enable Fuel Costs</en>
+            <de>Kraftstoffkosten aktivieren</de>
+            <fr>Activer les coûts de carburant</fr>
+            <nl>Brandstofkosten inschakelen</nl>
+            <it>Abilita costi carburante</it>
+            <pl>Włącz koszty paliwa</pl>
+            <es>Activar costos de combustible</es>
+            <ea>Activar costos de combustible</ea>
+            <pt>Ativar custos de combustível</pt>
+            <br>Ativar custos de combustível</br>
+            <ru>Включить затраты на топливо</ru>
+            <uk>Увімкнути витрати на пальне</uk>
+            <cz>Povolit náklady na palivo</cz>
+            <hu>Üzemanyagköltségek engedélyezése</hu>
+            <ro>Activați costurile de combustibil</ro>
+            <tr>Yakıt maliyetlerini etkinleştir</tr>
+            <fi>Ota polttoainekustannukset käyttöön</fi>
+            <no>Aktiver drivstoffkostnader</no>
+            <sv>Aktivera bränslekostnader</sv>
+            <da>Aktiver brændstofomkostninger</da>
+            <kr>연료 비용 활성화</kr>
+            <jp>燃料コストを有効にする</jp>
+            <ct>啟用燃料成本</ct>
+            <fc>启用燃料成本</fc>
+            <id>Aktifkan biaya bahan bakar</id>
+            <vi>Bật chi phí nhiên liệu</vi>
+        </text>
+    </l10n>
+    <sourceFiles>
+        <sourceFile filename="src/main.lua" />
+    </sourceFiles>
+</modDesc>

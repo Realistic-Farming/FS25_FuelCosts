@@ -1,0 +1,32 @@
+-- =========================================================
+-- FS25 Realistic Fuel Costs - SettingsSchema
+-- =========================================================
+-- Single source of truth for all settings.
+-- Drives Settings defaults, SettingsManager XML save/load,
+-- and the in-game UI generation.
+-- =========================================================
+
+FuelSettingsSchema = {}
+
+FuelSettingsSchema.definitions = {
+    -- { id, type, default, uiId }
+    { id = "enabled",           type = "bool",   default = true,        uiId = "fc_enabled"           },
+    { id = "baseFuelPrice",     type = "float",  default = 1.20,        uiId = "fc_basePrice"         },
+    { id = "difficulty",        type = "int",    default = 2,           uiId = "fc_difficulty"        },
+    { id = "priceVolatility",   type = "int",    default = 2,           uiId = "fc_volatility"        },
+    { id = "seasonalEffects",   type = "bool",   default = true,        uiId = "fc_seasonal"          },
+    { id = "marketShocks",      type = "bool",   default = true,        uiId = "fc_shocks"            },
+    { id = "showNotifications", type = "bool",   default = true,        uiId = "fc_notifications"     },
+    { id = "hudEnabled",        type = "bool",   default = true,        uiId = "fc_hud"               },
+    { id = "hudPosition",       type = "int",    default = 1,           uiId = "fc_hudPosition"       },
+    { id = "debugMode",         type = "bool",   default = false,       uiId = "fc_debug"             },
+}
+
+-- difficulty index → Constants key
+FuelSettingsSchema.DIFFICULTY_MAP = { "SIMPLE", "REALISTIC", "HARDCORE" }
+
+-- volatility index → Constants key
+FuelSettingsSchema.VOLATILITY_MAP = { "NONE", "LOW", "MEDIUM", "HIGH" }
+
+-- hudPosition index → anchor
+FuelSettingsSchema.HUD_POSITION_MAP = { "topLeft", "topRight", "bottomLeft", "bottomRight" }

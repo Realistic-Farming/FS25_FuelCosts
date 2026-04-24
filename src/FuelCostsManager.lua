@@ -34,10 +34,13 @@ function FuelCostsManager:init()
     self:_loadSettings()
     self.hud:init()
     self.hud:updatePosition()
-    self:_installHooks()
     FuelNetworkEvents_Register()
+    -- Apply initial price to DIESEL fill type immediately so it's
+    -- correct from the first fill even before the first day tick
+    self.priceEngine:applyToFillTypes()
     self.initialized = true
-    FuelLogger.info("Initialized — base price $%.2f/L", self.settings.baseFuelPrice)
+    FuelLogger.info("Initialized — base price $%.2f/L, current $%.4f/L",
+        self.settings.baseFuelPrice, self.priceEngine.currentPrice)
 end
 
 function FuelCostsManager:update(dt)
@@ -57,46 +60,20 @@ function FuelCostsManager:update(dt)
 end
 
 function FuelCostsManager:delete()
-    self:_uninstallHooks()
+    -- Restore DIESEL pricePerLiter so other mods/saves aren't affected
+    self.priceEngine:restoreOriginalPrices()
     if self.hud then self.hud:delete() end
     self.initialized = false
     FuelLogger.info("Deleted")
 end
 
 -- -------------------------------------------------------
--- Hooks
+-- Day-change price application
 -- -------------------------------------------------------
-
-function FuelCostsManager:_installHooks()
-    -- TODO: hook the vehicle fuel fill event to charge the player.
-    -- Candidate: FuelStation.buyFuel / Vehicle.setFuelFillLevel / FillUnit.addFillUnitFillLevel
-    -- Verify exact method + signature in FS25-Community-LUADOC before implementing.
-    -- Pattern to use: Utils.appendedFunction(TargetClass, "methodName", hookFn)
-    FuelLogger.info("Hooks installed (stub)")
-end
-
-function FuelCostsManager:_uninstallHooks()
-    -- TODO: remove all appended functions installed above
-    FuelLogger.info("Hooks removed (stub)")
-end
-
--- Called by the fuel fill hook when a vehicle is refuelled
-function FuelCostsManager:onVehicleFuelled(litresFilled, vehicle)
-    if not self.settings.enabled then return end
-    if litresFilled <= 0 then return end
-
-    local cost = self.priceEngine:chargeFill(litresFilled)
-
-    if self.settings.showNotifications and cost >= FuelConstants.NOTIFICATION.COST_THRESHOLD then
-        local msg = string.format(
-            g_i18n:getText("fc_notification_fill") or "Fuelled %.0fL — $%.2f",
-            litresFilled, cost
-        )
-        -- TODO: verify notification API in LUADOC
-        -- g_currentMission:addIngameNotification(FSBaseMission.INGAME_NOTIFICATION_INFO, msg)
-        FuelLogger.debug(msg)
-    end
-end
+-- No fill hook needed. Payment is handled entirely by
+-- FillTrigger:fillVehicle() → economyManager:getPricePerLiter()
+-- → fillType.pricePerLiter, which we update each game day.
+-- See FuelPriceEngine:applyToFillTypes() for details.
 
 -- -------------------------------------------------------
 -- Multiplayer

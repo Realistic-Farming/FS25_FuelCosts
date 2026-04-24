@@ -9,33 +9,38 @@
 -- =========================================================
 
 -- -------------------------------------------------------
--- FuelPriceSyncEvent
+-- FuelPriceSyncEvent  (Server → Clients)
 -- -------------------------------------------------------
 FuelPriceSyncEvent = {}
-FuelPriceSyncEvent.__index = FuelPriceSyncEvent
-FuelPriceSyncEvent.TYPE = nil
+local FuelPriceSyncEvent_mt = Class(FuelPriceSyncEvent, Event)
+InitEventClass(FuelPriceSyncEvent, "FuelPriceSyncEvent")
+
+function FuelPriceSyncEvent.emptyNew()
+    return Event.new(FuelPriceSyncEvent_mt)
+end
 
 function FuelPriceSyncEvent.new(currentPrice, shockActive, shockDaysLeft)
-    local self = setmetatable({}, FuelPriceSyncEvent)
+    local self = FuelPriceSyncEvent.emptyNew()
     self.currentPrice  = currentPrice  or 1.20
     self.shockActive   = shockActive   or false
     self.shockDaysLeft = shockDaysLeft or 0
     return self
 end
 
-function FuelPriceSyncEvent:writeStream(_, streamId)
+function FuelPriceSyncEvent:writeStream(streamId, connection)
     streamWriteFloat32(streamId, self.currentPrice)
     streamWriteBool(streamId, self.shockActive)
     streamWriteInt8(streamId, self.shockDaysLeft)
 end
 
-function FuelPriceSyncEvent:readStream(_, streamId)
+function FuelPriceSyncEvent:readStream(streamId, connection)
     self.currentPrice  = streamReadFloat32(streamId)
     self.shockActive   = streamReadBool(streamId)
     self.shockDaysLeft = streamReadInt8(streamId)
+    self:run(connection)
 end
 
-function FuelPriceSyncEvent:run(_)
+function FuelPriceSyncEvent:run(connection)
     if g_FuelCostsManager and g_FuelCostsManager.priceEngine then
         local pe = g_FuelCostsManager.priceEngine
         pe.currentPrice  = self.currentPrice
@@ -49,56 +54,80 @@ end
 -- FuelSettingChangeEvent  (Client → Server)
 -- -------------------------------------------------------
 FuelSettingChangeEvent = {}
-FuelSettingChangeEvent.__index = FuelSettingChangeEvent
-FuelSettingChangeEvent.TYPE = nil
-FuelSettingChangeEvent.MAX_ID_LEN = 40
+local FuelSettingChangeEvent_mt = Class(FuelSettingChangeEvent, Event)
+InitEventClass(FuelSettingChangeEvent, "FuelSettingChangeEvent")
+
+function FuelSettingChangeEvent.emptyNew()
+    return Event.new(FuelSettingChangeEvent_mt)
+end
 
 function FuelSettingChangeEvent.new(settingId, value)
-    local self = setmetatable({}, FuelSettingChangeEvent)
+    local self = FuelSettingChangeEvent.emptyNew()
     self.settingId = settingId or ""
     self.value     = value
     return self
 end
 
-function FuelSettingChangeEvent:writeStream(_, streamId)
+function FuelSettingChangeEvent.sendToServer(settingId, value)
+    if g_server ~= nil then
+        FuelSettingChangeEvent.execute(settingId, value)
+    else
+        g_client:getServerConnection():sendEvent(
+            FuelSettingChangeEvent.new(settingId, value)
+        )
+    end
+end
+
+function FuelSettingChangeEvent:writeStream(streamId, connection)
     streamWriteString(streamId, self.settingId)
     streamWriteString(streamId, tostring(self.value))
 end
 
-function FuelSettingChangeEvent:readStream(_, streamId)
+function FuelSettingChangeEvent:readStream(streamId, connection)
     self.settingId = streamReadString(streamId)
     self.valueStr  = streamReadString(streamId)
+    self:run(connection)
+end
+
+function FuelSettingChangeEvent.execute(settingId, valueStr)
+    -- TODO: validate admin, apply setting, broadcast FuelSettingSyncEvent
 end
 
 function FuelSettingChangeEvent:run(connection)
-    -- TODO: validate admin, apply setting, broadcast FuelSettingSyncEvent
+    if not connection:getIsServer() then return end
+    FuelSettingChangeEvent.execute(self.settingId, self.valueStr)
 end
 
 -- -------------------------------------------------------
 -- FuelSettingSyncEvent  (Server → Clients)
 -- -------------------------------------------------------
 FuelSettingSyncEvent = {}
-FuelSettingSyncEvent.__index = FuelSettingSyncEvent
-FuelSettingSyncEvent.TYPE = nil
+local FuelSettingSyncEvent_mt = Class(FuelSettingSyncEvent, Event)
+InitEventClass(FuelSettingSyncEvent, "FuelSettingSyncEvent")
+
+function FuelSettingSyncEvent.emptyNew()
+    return Event.new(FuelSettingSyncEvent_mt)
+end
 
 function FuelSettingSyncEvent.new(settingId, value)
-    local self = setmetatable({}, FuelSettingSyncEvent)
+    local self = FuelSettingSyncEvent.emptyNew()
     self.settingId = settingId or ""
     self.value     = value
     return self
 end
 
-function FuelSettingSyncEvent:writeStream(_, streamId)
+function FuelSettingSyncEvent:writeStream(streamId, connection)
     streamWriteString(streamId, self.settingId)
     streamWriteString(streamId, tostring(self.value))
 end
 
-function FuelSettingSyncEvent:readStream(_, streamId)
+function FuelSettingSyncEvent:readStream(streamId, connection)
     self.settingId = streamReadString(streamId)
     self.valueStr  = streamReadString(streamId)
+    self:run(connection)
 end
 
-function FuelSettingSyncEvent:run(_)
+function FuelSettingSyncEvent:run(connection)
     -- TODO: apply received setting to local FuelSettings instance
 end
 
@@ -106,25 +135,39 @@ end
 -- FuelRequestSyncEvent  (Client → Server)
 -- -------------------------------------------------------
 FuelRequestSyncEvent = {}
-FuelRequestSyncEvent.__index = FuelRequestSyncEvent
-FuelRequestSyncEvent.TYPE = nil
+local FuelRequestSyncEvent_mt = Class(FuelRequestSyncEvent, Event)
+InitEventClass(FuelRequestSyncEvent, "FuelRequestSyncEvent")
 
-function FuelRequestSyncEvent.new() return setmetatable({}, FuelRequestSyncEvent) end
-function FuelRequestSyncEvent:writeStream(_, _) end
-function FuelRequestSyncEvent:readStream(_, _) end
+function FuelRequestSyncEvent.emptyNew()
+    return Event.new(FuelRequestSyncEvent_mt)
+end
+
+function FuelRequestSyncEvent.new()
+    return FuelRequestSyncEvent.emptyNew()
+end
+
+function FuelRequestSyncEvent:writeStream(streamId, connection) end
+
+function FuelRequestSyncEvent:readStream(streamId, connection)
+    self:run(connection)
+end
 
 function FuelRequestSyncEvent:run(connection)
-    -- Server responds with full price + settings snapshot
-    -- TODO: implement full sync response
+    if not connection:getIsServer() then return end
+    -- Server responds to joining client with full price snapshot
+    if g_FuelCostsManager and g_FuelCostsManager.priceEngine then
+        local pe = g_FuelCostsManager.priceEngine
+        connection:sendEvent(
+            FuelPriceSyncEvent.new(pe.currentPrice, pe.shockActive, pe.shockDaysLeft)
+        )
+    end
 end
 
 -- -------------------------------------------------------
--- Registration
+-- Registration (called once after mission loads)
 -- -------------------------------------------------------
 function FuelNetworkEvents_Register()
-    FuelPriceSyncEvent.TYPE    = NetworkEvent.registerEvent(FuelPriceSyncEvent)
-    FuelSettingChangeEvent.TYPE = NetworkEvent.registerEvent(FuelSettingChangeEvent)
-    FuelSettingSyncEvent.TYPE  = NetworkEvent.registerEvent(FuelSettingSyncEvent)
-    FuelRequestSyncEvent.TYPE  = NetworkEvent.registerEvent(FuelRequestSyncEvent)
+    -- InitEventClass handles registration at file load time.
+    -- This function remains as a load-confirmation signal.
     FuelLogger.info("Network events registered")
 end

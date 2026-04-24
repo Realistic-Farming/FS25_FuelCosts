@@ -4,6 +4,17 @@
 -- Owns the current fuel price state.
 -- Handles daily fluctuation, seasonal modifiers, and
 -- market shock events. Server-authoritative in MP.
+--
+-- HOW PAYMENT WORKS (verified from FS25 LUADOC):
+--   FillTrigger:fillVehicle() already calls:
+--     price = delta * economyManager:getPricePerLiter(fillType)
+--     g_currentMission:addMoney(-price, farmId, ...)
+--   economyManager:getPricePerLiter() reads fillType.pricePerLiter
+--   directly from the FillTypeDesc object.
+--
+--   So we just modify g_fillTypeManager:getFillTypeByName("DIESEL")
+--   .pricePerLiter each day — the game's own payment system does
+--   the rest. No hook into the fill event needed at all.
 -- =========================================================
 
 ---@class FuelPriceEngine
@@ -12,12 +23,13 @@ FuelPriceEngine.__index = FuelPriceEngine
 
 function FuelPriceEngine.new(settings)
     local self = setmetatable({}, FuelPriceEngine)
-    self.settings       = settings
-    self.currentPrice   = settings.baseFuelPrice
-    self.lastDay        = -1
-    self.shockActive    = false
-    self.shockMagnitude = 0.0
-    self.shockDaysLeft  = 0
+    self.settings           = settings
+    self.currentPrice       = settings.baseFuelPrice
+    self.lastDay            = -1
+    self.shockActive        = false
+    self.shockMagnitude     = 0.0
+    self.shockDaysLeft      = 0
+    self.originalDieselPrice = nil   -- saved on first apply, restored on delete
     return self
 end
 
@@ -72,6 +84,42 @@ function FuelPriceEngine:onDayChanged(currentDay)
     self.currentPrice = self.currentPrice * diffMult
 
     FuelLogger.debug("Day %d — fuel price: $%.4f/L", currentDay, self.currentPrice)
+
+    -- Push the new price into the game's fill type so FillTrigger:fillVehicle()
+    -- picks it up automatically via economyManager:getPricePerLiter(fillType)
+    self:applyToFillTypes()
+end
+
+-- Write currentPrice into the DIESEL (and DEF) FillTypeDesc objects.
+-- FillTrigger:fillVehicle() reads fillType.pricePerLiter directly —
+-- changing it here is all that's needed; no payment hook required.
+function FuelPriceEngine:applyToFillTypes()
+    if not g_fillTypeManager then return end
+
+    local function apply(name)
+        local ft = g_fillTypeManager:getFillTypeByName(name)
+        if not ft then return end
+        if self.originalDieselPrice == nil and name == "DIESEL" then
+            self.originalDieselPrice = ft.pricePerLiter
+            FuelLogger.info("Original DIESEL price: $%.4f/L", self.originalDieselPrice)
+        end
+        ft.pricePerLiter = self.currentPrice
+    end
+
+    apply("DIESEL")
+    -- DEF tracks diesel price proportionally in real life; apply same rate
+    local defFt = g_fillTypeManager:getFillTypeByName("DEF")
+    if defFt and self.originalDieselPrice and self.originalDieselPrice > 0 then
+        defFt.pricePerLiter = defFt.pricePerLiter * (self.currentPrice / self.originalDieselPrice)
+    end
+end
+
+-- Restore the original pricePerLiter on mod unload
+function FuelPriceEngine:restoreOriginalPrices()
+    if not g_fillTypeManager or not self.originalDieselPrice then return end
+    local ft = g_fillTypeManager:getFillTypeByName("DIESEL")
+    if ft then ft.pricePerLiter = self.originalDieselPrice end
+    FuelLogger.info("Restored original DIESEL price: $%.4f/L", self.originalDieselPrice)
 end
 
 -- Returns the display price (rounded to 4dp)
@@ -92,16 +140,6 @@ function FuelPriceEngine:getPriceStatus()
     return "normal"
 end
 
--- Charge the player for a fuel fill. Returns the amount charged.
-function FuelPriceEngine:chargeFill(litresFilled)
-    if litresFilled <= 0 then return 0 end
-    local cost = litresFilled * self.currentPrice
-    if g_currentMission and g_currentMission.economyManager then
-        -- TODO: verify exact FS25 finance API from LUADOC before implementing
-        -- g_currentMission.economyManager:updateBalance(-cost, EconomyManager.CATEGORY_FUEL)
-    end
-    return cost
-end
 
 function FuelPriceEngine:saveToXML(xmlFile, baseKey)
     if not xmlFile then return end

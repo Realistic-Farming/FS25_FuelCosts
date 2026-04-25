@@ -2,7 +2,6 @@
 
 > **Diesel isn't free. Every litre counts.**
 
-![Status](https://img.shields.io/badge/status-WIP-orange)
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Platform](https://img.shields.io/badge/FS25-Farming%20Simulator%2025-green)
 ![Multiplayer](https://img.shields.io/badge/multiplayer-supported-brightgreen)

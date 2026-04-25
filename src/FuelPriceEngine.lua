@@ -23,13 +23,15 @@ FuelPriceEngine.__index = FuelPriceEngine
 
 function FuelPriceEngine.new(settings)
     local self = setmetatable({}, FuelPriceEngine)
-    self.settings           = settings
-    self.currentPrice       = settings.baseFuelPrice
-    self.lastDay            = -1
-    self.shockActive        = false
-    self.shockMagnitude     = 0.0
-    self.shockDaysLeft      = 0
-    self.originalDieselPrice = nil   -- saved on first apply, restored on delete
+    self.settings            = settings
+    self.currentPrice        = settings.baseFuelPrice
+    self.previousPrice       = settings.baseFuelPrice
+    self.lastDay             = -1
+    self.shockActive         = false
+    self.shockMagnitude      = 0.0
+    self.shockDaysLeft       = 0
+    self.originalDieselPrice = nil
+    self.originalDefPrice    = nil
     return self
 end
 
@@ -37,6 +39,7 @@ end
 function FuelPriceEngine:onDayChanged(currentDay)
     if currentDay == self.lastDay then return end
     self.lastDay = currentDay
+    self.previousPrice = self.currentPrice
 
     local base      = self.settings.baseFuelPrice
     local diffMult  = self.settings:getDifficultyMultiplier()
@@ -96,30 +99,51 @@ end
 function FuelPriceEngine:applyToFillTypes()
     if not g_fillTypeManager then return end
 
-    local function apply(name)
-        local ft = g_fillTypeManager:getFillTypeByName(name)
-        if not ft then return end
-        if self.originalDieselPrice == nil and name == "DIESEL" then
-            self.originalDieselPrice = ft.pricePerLiter
+    local dieselFt = g_fillTypeManager:getFillTypeByName("DIESEL")
+    if dieselFt then
+        if self.originalDieselPrice == nil then
+            self.originalDieselPrice = dieselFt.pricePerLiter
             FuelLogger.info("Original DIESEL price: $%.4f/L", self.originalDieselPrice)
         end
-        ft.pricePerLiter = self.currentPrice
+        dieselFt.pricePerLiter = self.currentPrice
     end
 
-    apply("DIESEL")
-    -- DEF tracks diesel price proportionally in real life; apply same rate
+    -- DEF tracks diesel proportionally. Store original once and compute from
+    -- it each time so the ratio never compounds across days.
     local defFt = g_fillTypeManager:getFillTypeByName("DEF")
     if defFt and self.originalDieselPrice and self.originalDieselPrice > 0 then
-        defFt.pricePerLiter = defFt.pricePerLiter * (self.currentPrice / self.originalDieselPrice)
+        if self.originalDefPrice == nil then
+            self.originalDefPrice = defFt.pricePerLiter
+            FuelLogger.info("Original DEF price: $%.4f/L", self.originalDefPrice)
+        end
+        defFt.pricePerLiter = self.originalDefPrice * (self.currentPrice / self.originalDieselPrice)
     end
 end
 
 -- Restore the original pricePerLiter on mod unload
 function FuelPriceEngine:restoreOriginalPrices()
-    if not g_fillTypeManager or not self.originalDieselPrice then return end
-    local ft = g_fillTypeManager:getFillTypeByName("DIESEL")
-    if ft then ft.pricePerLiter = self.originalDieselPrice end
-    FuelLogger.info("Restored original DIESEL price: $%.4f/L", self.originalDieselPrice)
+    if not g_fillTypeManager then return end
+    if self.originalDieselPrice then
+        local ft = g_fillTypeManager:getFillTypeByName("DIESEL")
+        if ft then ft.pricePerLiter = self.originalDieselPrice end
+        FuelLogger.info("Restored original DIESEL price: $%.4f/L", self.originalDieselPrice)
+    end
+    if self.originalDefPrice then
+        local ft = g_fillTypeManager:getFillTypeByName("DEF")
+        if ft then ft.pricePerLiter = self.originalDefPrice end
+        FuelLogger.info("Restored original DEF price: $%.4f/L", self.originalDefPrice)
+    end
+end
+
+-- Returns "up", "down", or "stable" based on last day-change delta
+function FuelPriceEngine:getTrend()
+    local threshold = self.previousPrice * 0.005
+    if self.currentPrice - self.previousPrice > threshold then
+        return "up"
+    elseif self.previousPrice - self.currentPrice > threshold then
+        return "down"
+    end
+    return "stable"
 end
 
 -- Returns the display price (rounded to 4dp)

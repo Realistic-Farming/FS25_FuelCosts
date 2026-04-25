@@ -68,6 +68,7 @@ end
 
 function FuelHUD:draw()
     if not self.initialized then return end
+    if g_gui and (g_gui:getIsGuiVisible() or g_gui:getIsDialogVisible()) then return end
 
     self:drawFlash()
 
@@ -96,6 +97,16 @@ function FuelHUD:draw()
     setTextBold(true)
     renderText(self.posX + C.PADDING, self.posY + C.HEIGHT * 0.15, C.FONT_SIZE,
         string.format("$%.4f/L", price))
+
+    -- Trend indicator (ASCII — right-aligned in box)
+    local trend = self.priceEngine:getTrend()
+    local trendText = trend == "up" and "UP" or (trend == "down" and "DN" or "--")
+    local trendCol  = trend == "up" and COLOR.expensive or (trend == "down" and COLOR.cheap or COLOR.label)
+    setTextColor(trendCol[1], trendCol[2], trendCol[3], trendCol[4])
+    setTextBold(false)
+    setTextAlignment(RenderText.ALIGN_RIGHT)
+    renderText(self.posX + C.WIDTH - C.PADDING, self.posY + C.HEIGHT * 0.15, C.FONT_SIZE * 0.70, trendText)
+    setTextAlignment(RenderText.ALIGN_LEFT)
 end
 
 function FuelHUD:update(dt)

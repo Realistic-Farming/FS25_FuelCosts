@@ -101,7 +101,7 @@ local C = {
 local SETTINGS_SECTIONS = {
     {
         header = "Simulation",
-        items  = { "enabled", "difficulty", "priceVolatility", "seasonalEffects", "marketShocks" },
+        items  = { "enabled", "baseFuelPrice", "difficulty", "priceVolatility", "seasonalEffects", "marketShocks" },
     },
     {
         header = "Display",
@@ -121,6 +121,7 @@ local MULTI_OPTS = {
 
 local SETTING_LABELS = {
     enabled          = "Mod Enabled",
+    baseFuelPrice    = "Base Fuel Price",
     difficulty       = "Difficulty",
     priceVolatility  = "Price Volatility",
     seasonalEffects  = "Seasonal Effects",
@@ -133,7 +134,8 @@ local SETTING_LABELS = {
 
 local SETTING_DESCS = {
     enabled          = "Master on/off for fuel cost simulation",
-    difficulty       = "Price multiplier (Simple=0.6×, Realistic=1×, Hardcore=1.5×)",
+    baseFuelPrice    = "Base price per litre in game currency (step 0.10)",
+    difficulty       = "Price multiplier (Simple=0.6x, Realistic=1x, Hardcore=1.5x)",
     priceVolatility  = "Daily swing range for market fluctuation",
     seasonalEffects  = "Seasonal price curve (winter costs more)",
     marketShocks     = "Random supply shock events",
@@ -283,7 +285,7 @@ function FuelSettingsPanel:requestChange(id, value)
 
     self.manager.settings[id] = value
     -- Re-apply fill types immediately if price-affecting setting changed
-    if id == "enabled" or id == "difficulty" then
+    if id == "enabled" or id == "difficulty" or id == "baseFuelPrice" then
         if self.manager.priceEngine then
             self.manager.priceEngine:applyToFillTypes()
         end
@@ -658,6 +660,8 @@ function FuelSettingsPanel:drawSettingRow(x, y, w, settingId, rowIdx, isAdmin)
         self:drawToggleControl(ctrlX, ctrlY, settingId, locked)
     elseif def.type == "int" or def.type == "number" then
         self:drawMultiControl(ctrlX, ctrlY, settingId, locked)
+    elseif def.type == "float" then
+        self:drawStepControl(ctrlX, ctrlY, settingId, locked)
     end
 
     self:drawRect(x, y, w, 0.0005, C.divider, 0.35)
@@ -725,6 +729,38 @@ function FuelSettingsPanel:drawMultiControl(rightX, y, settingId, locked)
     end
 end
 
+-- ── Step control [−] $1.20/L [+] (for float settings) ────
+function FuelSettingsPanel:drawStepControl(rightX, y, settingId, locked)
+    local val    = self:getValue(settingId) or 0
+    local arrowW = 0.022
+    local labelW = MULTI_W - arrowW * 2
+    local totalX = rightX - MULTI_W
+    local leftX  = totalX
+    local midX   = totalX + arrowW
+    local rightBX = totalX + arrowW + labelW
+
+    local lHover = not locked and self:hitTest(leftX, y, arrowW, TOGGLE_H, self.mouseX, self.mouseY)
+    self:drawRect(leftX, y, arrowW, TOGGLE_H, lHover and C.back_hover or C.off_bg)
+    self:drawText(leftX + arrowW * 0.5, y + TOGGLE_H * 0.18, TS_TINY,
+        "-", lHover and C.amber or C.dim, RenderText.ALIGN_CENTER, true)
+
+    self:drawRect(midX, y, labelW, TOGGLE_H, {0.10, 0.11, 0.15, 0.90})
+    self:drawText(midX + labelW * 0.5, y + TOGGLE_H * 0.18, TS_TINY,
+        string.format("$%.2f / L", val), C.white, RenderText.ALIGN_CENTER, false)
+
+    local rHover = not locked and self:hitTest(rightBX, y, arrowW, TOGGLE_H, self.mouseX, self.mouseY)
+    self:drawRect(rightBX, y, arrowW, TOGGLE_H, rHover and C.back_hover or C.off_bg)
+    self:drawText(rightBX + arrowW * 0.5, y + TOGGLE_H * 0.18, TS_TINY,
+        "+", rHover and C.amber or C.dim, RenderText.ALIGN_CENTER, true)
+
+    if not locked then
+        self:registerClick("step_dec_" .. settingId, leftX, y, arrowW, TOGGLE_H,
+            { id = settingId, dir = -1 })
+        self:registerClick("step_inc_" .. settingId, rightBX, y, arrowW, TOGGLE_H,
+            { id = settingId, dir = 1 })
+    end
+end
+
 -- ── Mouse event ───────────────────────────────────────────
 function FuelSettingsPanel:onMouseEvent(posX, posY, isDown, isUp, button, eventUsed)
     if not self.isVisible then return false end
@@ -778,6 +814,18 @@ function FuelSettingsPanel:handleClick(id, data)
             local nxt = cur + 1
             if nxt > #data.opts then nxt = 1 end
             self:requestChange(data.id, nxt)
+        end
+
+    elseif id:sub(1, 9) == "step_dec_" or id:sub(1, 9) == "step_inc_" then
+        if data then
+            local cur = self:getValue(data.id) or 1.20
+            local nxt = cur + data.dir * 0.10
+            nxt = math.floor(nxt * 100 + 0.5) / 100  -- round to 2dp
+            nxt = math.max(0.10, math.min(10.0, nxt))
+            self:requestChange(data.id, nxt)
+            if self.manager and self.manager.priceEngine then
+                self.manager.priceEngine:applyToFillTypes()
+            end
         end
 
     elseif id == "force_tick" then

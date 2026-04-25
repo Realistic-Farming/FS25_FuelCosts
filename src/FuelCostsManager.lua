@@ -26,6 +26,8 @@ function FuelCostsManager.new()
     self._wasFueling       = false
     self._fuelSessionAdded = 0
     self._fuelStopTimer    = 0
+    self._prevDieselLevel  = nil
+    self._trackedVehicle   = nil
 
     FuelLogger.info("FuelCostsManager created")
     return self
@@ -44,14 +46,9 @@ function FuelCostsManager:init()
     -- correct from the first fill even before the first day tick
     self.priceEngine:applyToFillTypes()
 
-    -- Hook FillTrigger.fillVehicle to detect refueling events.
-    -- FillTrigger is a plain class (not a specialization), so this appended
-    -- function fires for every client-visible fill trigger call.
-    Utils.appendedFunction(FillTrigger, "fillVehicle", function(trigger, vehicle, delta, dt)
-        if g_FuelCostsManager then
-            g_FuelCostsManager:_onFillTriggerFill(vehicle, trigger.fillTypeIndex, delta)
-        end
-    end)
+    -- Refuel detection runs in update() via fill level delta monitoring.
+    -- FillTrigger.fillVehicle is NOT called by FS25 fuel stations (they use
+    -- a subclass that overrides it), so hook-based detection is unreliable.
 
     self.initialized = true
     FuelLogger.info("Initialized — base price $%.2f/L, current $%.4f/L",
@@ -66,8 +63,88 @@ function FuelCostsManager:update(dt)
 
     if not self.settings.enabled then return end
 
-    -- Session-end timer: fires "X litres — $Y" after 1.5 s of no fill events
-    if self.settings.showNotifications and self._wasFueling then
+    -- Refuel detection: monitor diesel fill level on the player's current vehicle.
+    -- Hook-based detection (FillTrigger.fillVehicle) doesn't work because FS25
+    -- fuel stations use a subclass that never calls the base method.
+    if self.settings.showNotifications then
+        self:_updateRefuelDetection(dt)
+    end
+
+    -- Day-change tick (server or singleplayer only)
+    if g_currentMission and g_currentMission.environment then
+        local day = g_currentMission.environment.currentDay or -1
+        if day ~= self.lastDay and g_server ~= nil then
+            self.lastDay = day
+            local wasShockActive = self.priceEngine.shockActive
+            self.priceEngine:onDayChanged(day)
+            self:_broadcastPrice()
+            if self.settings.showNotifications then
+                self:_notifyShockChange(wasShockActive)
+            end
+        end
+    end
+end
+
+function FuelCostsManager:delete()
+    if self.settingsPanel then self.settingsPanel:delete() end
+    -- Restore DIESEL pricePerLiter so other mods/saves aren't affected
+    self.priceEngine:restoreOriginalPrices()
+    if self.hud then self.hud:delete() end
+    self.initialized = false
+    FuelLogger.info("Deleted")
+end
+
+-- -------------------------------------------------------
+-- Refuel detection (fill level delta, update-loop driven)
+-- -------------------------------------------------------
+
+-- Returns the root motorized vehicle under the local player that has a
+-- DIESEL fill unit, or nil. Walks up rootVehicle to skip hand tools.
+function FuelCostsManager:_getLocalDieselVehicle()
+    if not g_localPlayer then return nil end
+    local vehicle = g_localPlayer:getCurrentVehicle()
+    if not vehicle then return nil end
+    if vehicle.rootVehicle and vehicle.rootVehicle ~= vehicle then
+        vehicle = vehicle.rootVehicle
+    end
+    local spec = vehicle.spec_fillUnit
+    if not spec or not spec.fillUnits then return nil end
+    for _, fillUnit in ipairs(spec.fillUnits) do
+        if fillUnit.fillType == FillType.DIESEL then
+            return vehicle, fillUnit
+        end
+    end
+    return nil
+end
+
+function FuelCostsManager:_updateRefuelDetection(dt)
+    local vehicle, fillUnit = self:_getLocalDieselVehicle()
+    local level = fillUnit and fillUnit.fillLevel or nil
+
+    if level ~= nil and self._prevDieselLevel ~= nil and self._trackedVehicle == vehicle then
+        local delta = level - self._prevDieselLevel
+        if delta > 0.01 then
+            -- Fuel level is rising — active refueling
+            if not self._wasFueling then
+                self._wasFueling       = true
+                self._fuelSessionAdded = 0
+                self._fuelStopTimer    = 0
+                FuelLogger.debug("Notif: refuel session STARTED (delta=%.2fL)", delta)
+                local modEnv  = g_modEnvironments and g_modEnvironments[g_currentModName]
+                local i18n    = (modEnv and modEnv.i18n) or g_i18n
+                local startMsg = (i18n and i18n:getText("fc_notification_refueling")) or "Refueling..."
+                self.hud:flash(startMsg, {0.55, 0.80, 0.95, 1.0}, 2.5)
+            end
+            self._fuelSessionAdded = self._fuelSessionAdded + delta
+            self._fuelStopTimer    = 0
+        end
+    end
+
+    self._prevDieselLevel = level
+    self._trackedVehicle  = vehicle
+
+    -- Session-end timer: fires "X litres — $Y" after 1.5 s of no fill activity
+    if self._wasFueling then
         self._fuelStopTimer = self._fuelStopTimer + dt / 1000
         if self._fuelStopTimer >= 1.5 then
             self._wasFueling = false
@@ -83,53 +160,21 @@ function FuelCostsManager:update(dt)
             self._fuelStopTimer    = 0
         end
     end
-
-    -- Day-change tick (server or singleplayer only)
-    if g_currentMission and g_currentMission.environment then
-        local day = g_currentMission.environment.currentDay or -1
-        if day ~= self.lastDay and g_server ~= nil then
-            self.lastDay = day
-            self.priceEngine:onDayChanged(day)
-            self:_broadcastPrice()
-        end
-    end
-end
-
-function FuelCostsManager:delete()
-    if self.settingsPanel then self.settingsPanel:delete() end
-    -- Restore DIESEL pricePerLiter so other mods/saves aren't affected
-    self.priceEngine:restoreOriginalPrices()
-    if self.hud then self.hud:delete() end
-    self.initialized = false
-    FuelLogger.info("Deleted")
 end
 
 -- -------------------------------------------------------
--- Refuel notification (hook-driven)
+-- Shock notifications
 -- -------------------------------------------------------
 
-function FuelCostsManager:_onFillTriggerFill(vehicle, fillTypeIndex, delta)
-    if not self.initialized or not self.settings.enabled or not self.settings.showNotifications then return end
-    if not vehicle or not vehicle.getActiveFarm then return end
-    if fillTypeIndex ~= FillType.DIESEL then return end
-    if delta <= 0 then return end
-
-    local localFarmId = g_localPlayer and g_localPlayer.farmId or 1
-    if vehicle:getActiveFarm() ~= localFarmId then return end
-
-    if not self._wasFueling then
-        self._wasFueling       = true
-        self._fuelSessionAdded = 0
-        self._fuelStopTimer    = 0
-        FuelLogger.debug("Notif: refuel session STARTED")
-        local modEnv  = g_modEnvironments and g_modEnvironments[g_currentModName]
-        local i18n    = (modEnv and modEnv.i18n) or g_i18n
-        local startMsg = (i18n and i18n:getText("fc_notification_refueling")) or "Refueling..."
-        self.hud:flash(startMsg, {0.55, 0.80, 0.95, 1.0}, 2.5)
+function FuelCostsManager:_notifyShockChange(wasShockActive)
+    local pe = self.priceEngine
+    if not wasShockActive and pe.shockActive then
+        local dir = pe.shockMagnitude >= 0 and "SURGE" or "SLUMP"
+        local col = pe.shockMagnitude >= 0 and {0.95, 0.35, 0.35, 1.0} or {0.40, 0.85, 0.40, 1.0}
+        self.hud:flash(string.format("Market shock! Fuel %s %+.0f%%", dir, pe.shockMagnitude * 100), col, 5)
+    elseif wasShockActive and not pe.shockActive then
+        self.hud:flash("Market shock ended — prices normalising", {0.70, 0.70, 0.70, 1.0}, 4)
     end
-
-    self._fuelSessionAdded = self._fuelSessionAdded + delta
-    self._fuelStopTimer    = 0
 end
 
 -- -------------------------------------------------------

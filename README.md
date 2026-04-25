@@ -2,7 +2,8 @@
 
 > **Diesel isn't free. Every litre counts.**
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Status](https://img.shields.io/badge/status-stable-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![Platform](https://img.shields.io/badge/FS25-Farming%20Simulator%2025-green)
 ![Multiplayer](https://img.shields.io/badge/multiplayer-supported-brightgreen)
 
@@ -22,24 +23,26 @@ One mechanic. Universal impact. No new systems to learn.
 
 | Feature | Status |
 |---------|--------|
-| Dynamic daily fuel pricing | 🔧 WIP |
-| Seasonal price modifiers (autumn peak, winter premium) | 🔧 WIP |
-| Random market shock events (±15–35% for 3–7 days) | 🔧 WIP |
-| Live price HUD (colour-coded: green / white / red) | 🔧 WIP |
-| Fill cost notification on refuel | 🔧 WIP |
-| Configurable base price, volatility, and difficulty | 🔧 WIP |
-| Server-authoritative pricing in multiplayer | 🔧 WIP |
-| Price state persists across save/load | 🔧 WIP |
+| Dynamic daily fuel pricing | ✅ |
+| Seasonal price modifiers (autumn peak, winter premium) | ✅ |
+| Random market shock events (±15–35% for 3–7 days) | ✅ |
+| Flash notifications for shock start/end | ✅ |
+| Live price HUD with colour-coded status and trend indicator | ✅ |
+| Fill cost notification on refuel | ✅ |
+| Configurable base price, volatility, and difficulty | ✅ |
+| In-game settings panel (Shift+F) | ✅ |
+| Server-authoritative pricing in multiplayer | ✅ |
+| Price state persists across save/load | ✅ |
+| Console commands for debugging and price override | ✅ |
+| 26-language localization | ✅ |
 | MarketDynamics integration (oil price world event) | 📋 Planned |
-| Console commands for debugging and price override | 🔧 WIP |
-| 26-language localization | 🔧 WIP |
 
 ---
 
 ## How It Works
 
 ### Daily Price Engine
-Each game day, the engine runs a random walk on the current price — up or down by a configurable percentage. Seasonal modifiers layer on top: autumn harvest season pushes prices up, spring is mild. Occasionally, a market shock event hits — a multi-day spike or dip that simulates real-world supply disruptions.
+Each game day, the engine runs a random walk on the current price — up or down by a configurable percentage. Seasonal modifiers layer on top: autumn harvest season pushes prices up, spring is mild. Occasionally, a market shock event hits — a multi-day spike or dip that simulates real-world supply disruptions. You'll get a screen notification when a shock starts and when it ends.
 
 ### Difficulty Multipliers
 | Difficulty | Multiplier | Feel |
@@ -57,21 +60,25 @@ Each game day, the engine runs a random walk on the current price — up or down
 | High | ±14% | Volatile — plan carefully |
 
 ### HUD
-A small persistent display shows the current diesel price per litre, colour-coded:
-- 🟢 **Green** — below 80% of base price (buy now)
-- ⚪ **White** — normal range
-- 🔴 **Red** — above 125% of base price (expensive)
+A small persistent display shows the current diesel price per litre, colour-coded by market status, with a trend indicator showing the direction since yesterday:
+
+- **Green** — below 80% of base price (buy now)
+- **White** — normal range
+- **Red** — above 125% of base price (expensive)
+- **UP / DN / --** — trend vs previous day
+
+The HUD hides automatically when any game menu is open.
 
 ---
 
-## Compatibility
+## In-Game Settings Panel
 
-| Mod | Status |
-|-----|--------|
-| FS25_MarketDynamics | Planned integration — oil price event will affect fuel price |
-| FS25_WorkerCosts | Works alongside — workers burning your fuel costs more when prices spike |
-| FS25_RandomWorldEvents | No conflict |
-| All other mods | No known conflicts |
+Press **Shift+F** (or the bound key) to open the settings panel. It has two tabs:
+
+- **Fuel** — live dashboard showing current price, market shock status, season modifier, volatility, and a force-tick button (admin/SP only)
+- **Settings** — toggle and configure all options without leaving the game
+
+In multiplayer, settings are server-authoritative — only admins can change shared settings. HUD position and notification preferences are local per-player.
 
 ---
 
@@ -89,33 +96,36 @@ A small persistent display shows the current diesel price per litre, colour-code
 | Command | Description |
 |---------|-------------|
 | `FuelCostsInfo` | Show current price, status, and shock state |
-| `FuelCostsSetPrice <value>` | Override base fuel price |
+| `FuelCostsSetPrice <value>` | Override base fuel price (0.10–10.00) |
 | `FuelCostsDebug` | Toggle debug logging |
+| `FuelCostsTestNotif` | Fire a test flash notification |
 
 ---
 
 ## Settings
 
-All settings are accessible in-game. In multiplayer, settings are server-authoritative — only admins can change them.
-
 | Setting | Default | Description |
 |---------|---------|-------------|
-| Enable Fuel Costs | ON | Master toggle |
-| Base Fuel Price | $1.20/L | Starting price |
-| Difficulty | Realistic | Price multiplier |
+| Mod Enabled | ON | Master toggle |
+| Base Fuel Price | $1.20/L | Starting price (editable in-panel) |
+| Difficulty | Realistic | Price multiplier tier |
 | Price Volatility | Medium | Daily swing range |
 | Seasonal Effects | ON | Autumn/winter premium |
 | Market Shocks | ON | Random price spikes/dips |
-| Show Notifications | ON | Fill cost popup |
-| Show HUD | ON | Price display overlay |
+| Show Notifications | ON | Fill cost popup on refuel |
+| Show HUD | ON | Live price display overlay |
+| HUD Position | Top Left | Screen corner for the HUD |
 
 ---
 
-## Development Status
+## Compatibility
 
-This mod is **actively in development**. The architecture is scaffolded and the price engine is implemented. The fuel fill hook and FS25 finance API calls are pending API verification against the FS25 LUADOC. Expect rapid iteration.
-
-**Next milestone:** Working fuel deduction on refuel with live HUD display.
+| Mod | Status |
+|-----|--------|
+| FS25_MarketDynamics | Planned integration — oil price event will affect fuel price |
+| FS25_WorkerCosts | Works alongside — workers burning your fuel costs more when prices spike |
+| FS25_RandomWorldEvents | No conflict |
+| All other mods | No known conflicts |
 
 ---
 

@@ -24,12 +24,12 @@ FuelConstants = {
     },
 
     -- Seasonal price modifiers (multiplied on top of base)
-    -- Spring=1, Summer=2, Autumn=3, Winter=4
+    -- FS25 currentSeason is 0-indexed: 0=Spring, 1=Summer, 2=Autumn, 3=Winter
     SEASONAL = {
-        [1] = 0.97,   -- Spring  — mild demand
-        [2] = 1.00,   -- Summer  — baseline
-        [3] = 1.05,   -- Autumn  — harvest season peak
-        [4] = 1.10,   -- Winter  — cold weather premium
+        [0] = 0.97,   -- Spring  — mild demand
+        [1] = 1.00,   -- Summer  — baseline
+        [2] = 1.05,   -- Autumn  — harvest season peak
+        [3] = 1.10,   -- Winter  — cold weather premium
     },
 
     -- Market shock events (random spikes/dips)

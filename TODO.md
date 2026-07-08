@@ -1,25 +1,26 @@
 # TODO: FS25_FuelCosts
 
 > Ecosystem role: **Markets and Economy** · Part of the Realistic Farming connected suite
-> Status: TEMPLATE (working checklist). Fill from the ecosystem audit/baseline, then keep it current.
+> Status: FILLED from the ecosystem audit/baseline, kept current.
 > Convention: `[ ]` open · `[~]` in progress · `[x]` done · `[!]` blocked. Newest at the top of each section.
 
 ## From the ecosystem audit (Arissani)
-_Action items that come out of the audit/baseline go here first so nothing is missed._
-- [ ] _audit item_
+- [ ] Decide the bedrock migration scope: stay a lightweight price oracle on `FS25_FuelCosts.xml`, or adopt the four bedrock engines like the economy mods.
+- [ ] Confirm the price-read API surface (getDisplayPrice/getTrend/getPriceStatus) is what consumers (DairyCore) need.
 
 ## Bugs
-- [ ] _bug_
+- [ ] None from the audit. Charging rides the base-game fill path (no custom hook), so no MP double-charge.
 
 ## Features / enhancements
-- [ ] _feature_
+- [ ] None scheduled. The daily price update works as designed.
 
 ## Cross-mod integration
-_Wiring to StateLedger / NetworkSync / MasterHUD / SettingsHub / FarmTablet / peer mods._
-- [ ] _integration task_
+- [ ] StateLedger/NetworkSync/MasterHUD/SettingsHub: NOT yet specced for FuelCosts. Blocked on the scope decision above.
+- [x] Price-read API for consumers: getDisplayPrice(), getTrend(), getPriceStatus() (read-only, pcall + handle gate).
 
 ## Docs / localization
-- [ ] _doc or translation task (remember all 26 languages)_
+- [ ] Keep all 26 languages in step for any new setting.
+- [ ] Update README/version on each release.
 
 ## Blocked / waiting on
-- [!] _blocked item + what it waits on_
+- [!] Bedrock migration (waits on: the scope decision, whether FuelCosts stays an oracle or joins the full migration).

@@ -1,7 +1,7 @@
 # Roadmap: FS25_FuelCosts
 
 > Ecosystem role: **Markets and Economy** · Part of the Realistic Farming connected suite
-> Status: TEMPLATE (complete after the ecosystem audit/baseline).
+> Status: FILLED from the ecosystem audit/baseline.
 > Forward-looking only. Shipped history lives in CHANGELOG.md and the releases.
 
 ## How to use this file
@@ -10,23 +10,21 @@
 - Keep it honest: near-term is committed, mid-term is intended, long-term is aspirational.
 
 ## Current baseline
-- Version at baseline: _modDesc version_
-- Audit reference: _link to audit doc / CLAUDE-LOG entry_
-- Baseline date: _..._
+- Version at baseline: see modDesc.xml (price-oracle build)
+- Audit reference: ecosystem-dev-tracking Point 1-3 (FS25_FuelCosts, 2026-06-29)
+- Baseline date: 2026-06-29
 
 ## Near-term (next release cycle)
-- [ ] _item_
+- [ ] Keep the price-read API stable for consumers: getDisplayPrice(), getTrend(), getPriceStatus() are the contract; do not rename.
 
 ## Mid-term (this season)
-- [ ] _item_
+- [ ] Decide the bedrock migration scope (see the open question): stay a lightweight oracle, or adopt StateLedger/SettingsHub/NetworkSync/MasterHUD like the economy mods.
 
 ## Long-term / aspirational
-- [ ] _item_
+- [ ] Richer fuel market (regional prices, supply shocks, seasonal swings) without breaking the read API.
 
 ## Cross-mod / ecosystem dependencies
-_Roadmap items that depend on a peer mod or a core-API bedrock mod._
-- [ ] _item (blocks on: which mod / which bedrock engine)_
+- [ ] Consumers reading the price (DairyCore and others) depend on the read API staying stable.
 
 ## Deferred / parked
-_Ideas intentionally not scheduled, each with a one-line reason._
-- _..._
+- `logOperatingRun()` / an operating-cost registration API: explicitly not built. Companions compute cost from the price. Do not add it.

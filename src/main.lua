@@ -41,6 +41,13 @@ source(modDirectory .. "src/network/NetworkEvents.lua")
 source(modDirectory .. "src/FuelCostsManager.lua")
 
 -- -------------------------------------------------------
+-- Phase 6 — Bedrock bridges (optional, delegate-when-present)
+-- -------------------------------------------------------
+source(modDirectory .. "src/integrations/FuelStateLedgerBridge.lua")
+source(modDirectory .. "src/integrations/FuelSettingsHubBridge.lua")
+source(modDirectory .. "src/integrations/FuelMasterHUDBridge.lua")
+
+-- -------------------------------------------------------
 -- Lifecycle state
 -- -------------------------------------------------------
 local fcm = nil
@@ -67,6 +74,18 @@ end
 local function loadedMission(mission, node)
     if not isEnabled() or mission.cancelLoading then return end
     fcm:init()
+
+    -- Bedrock bridges (delegate-when-present; each no-ops if its bedrock mod is
+    -- absent). Handles are published by the bedrock mods at Mission00.load. When
+    -- StateLedger carries a price block it overrides the price just loaded from
+    -- FS25_FuelCosts.xml; the own XML stays the safety copy.
+    FuelStateLedgerBridge.register(fcm)
+    if FuelStateLedgerBridge.hasLedgerState() then
+        FuelStateLedgerBridge.applyState(fcm)
+    end
+    FuelSettingsHubBridge.register(fcm)
+    FuelMasterHUDBridge.register(fcm)
+
     fcm:registerConsoleCommands()
     if g_client ~= nil and g_server == nil then
         g_client:getServerConnection():sendEvent(FuelRequestSyncEvent.new())
@@ -100,6 +119,9 @@ end)
 
 -- renderOverlay/renderText are ONLY valid inside a draw callback (not update)
 FSBaseMission.draw = Utils.appendedFunction(FSBaseMission.draw, function(mission)
+    -- When MasterHUD is present it owns the single draw loop (our draw was registered
+    -- as a self-draw via the bridge); stand down so the HUD never draws twice.
+    if FuelMasterHUDBridge ~= nil and FuelMasterHUDBridge.active then return end
     if not mission.isRunning then return end
     if fcm and fcm.hud then
         fcm.hud:draw()

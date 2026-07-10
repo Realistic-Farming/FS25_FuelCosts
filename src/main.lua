@@ -44,6 +44,7 @@ source(modDirectory .. "src/FuelCostsManager.lua")
 -- Phase 6 — Bedrock bridges (optional, delegate-when-present)
 -- -------------------------------------------------------
 source(modDirectory .. "src/integrations/FuelStateLedgerBridge.lua")
+source(modDirectory .. "src/integrations/FuelNetworkSyncBridge.lua")
 source(modDirectory .. "src/integrations/FuelSettingsHubBridge.lua")
 source(modDirectory .. "src/integrations/FuelMasterHUDBridge.lua")
 
@@ -85,9 +86,12 @@ local function loadedMission(mission, node)
     end
     FuelSettingsHubBridge.register(fcm)
     FuelMasterHUDBridge.register(fcm)
+    FuelNetworkSyncBridge.register(fcm)
 
     fcm:registerConsoleCommands()
-    if g_client ~= nil and g_server == nil then
+    -- Client join sync: when NetworkSync is active it delivers the full price state
+    -- to joining clients, so the own request event is only the fallback path.
+    if g_client ~= nil and g_server == nil and not FuelNetworkSyncBridge.active then
         g_client:getServerConnection():sendEvent(FuelRequestSyncEvent.new())
     end
 end

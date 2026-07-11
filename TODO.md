@@ -5,7 +5,7 @@
 > Convention: `[ ]` open · `[~]` in progress · `[x]` done · `[!]` blocked. Newest at the top of each section.
 
 ## From the ecosystem audit (Arissani)
-- [ ] Decide the bedrock migration scope: stay a lightweight price oracle on `FS25_FuelCosts.xml`, or adopt the four bedrock engines like the economy mods.
+- [x] Bedrock migration scope DECIDED: adopt all four engines (delegate-when-present), price stays a no-addMoney oracle. Built - see Cross-mod integration.
 - [ ] Confirm the price-read API surface (getDisplayPrice/getTrend/getPriceStatus) is what consumers (DairyCore) need.
 
 ## Bugs
@@ -15,7 +15,11 @@
 - [ ] None scheduled. The daily price update works as designed.
 
 ## Cross-mod integration
-- [ ] StateLedger/NetworkSync/MasterHUD/SettingsHub: NOT yet specced for FuelCosts. Blocked on the scope decision above.
+- [x] All four bedrock bridges LIVE (delegate-when-present; own FS25_FuelCosts.xml + sync events kept as the standalone fallback). Commits 3a9ef4b + 03d22e8:
+  - StateLedger `FuelCosts_Price` (currentPrice / lastDay / shock state; force-parseFile, overrides the XML price when present).
+  - NetworkSync full daily price SNAPSHOT (id `FS25_FuelCosts`, channel `FuelCosts_Sync`; mirrors FuelPriceSyncEvent, delegates _broadcastPrice + client join). No addMoney (price oracle).
+  - MasterHUD `FuelCosts_HUD` (price HUD + settings panel; own draw stands down).
+  - SettingsHub `FuelCosts` (bare name, selfPersisted, schema-walked). Owed: two-machine MP test.
 - [x] Price-read API for consumers: getDisplayPrice(), getTrend(), getPriceStatus() (read-only, pcall + handle gate).
 
 ## Docs / localization
@@ -23,4 +27,4 @@
 - [ ] Update README/version on each release.
 
 ## Blocked / waiting on
-- [!] Bedrock migration (waits on: the scope decision, whether FuelCosts stays an oracle or joins the full migration).
+- [x] Bedrock migration DONE - all four bridges built (commits 3a9ef4b + 03d22e8). Only the whole-wave two-machine MP test remains.

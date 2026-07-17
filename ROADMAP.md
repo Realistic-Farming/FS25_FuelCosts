@@ -18,7 +18,7 @@
 - [ ] Keep the price-read API stable for consumers: getDisplayPrice(), getTrend(), getPriceStatus() are the contract; do not rename.
 
 ## Mid-term (this season)
-- [ ] Decide the bedrock migration scope (see the open question): stay a lightweight oracle, or adopt StateLedger/SettingsHub/NetworkSync/MasterHUD like the economy mods.
+- [x] Bedrock migration scope DECIDED and built: adopted all four engines (StateLedger + NetworkSync + MasterHUD + SettingsHub, delegate-when-present; commits 3a9ef4b + 03d22e8). Price stays a no-addMoney oracle. Whole-wave two-machine MP test still owed.
 
 ## Long-term / aspirational
 - [ ] Richer fuel market (regional prices, supply shocks, seasonal swings) without breaking the read API.

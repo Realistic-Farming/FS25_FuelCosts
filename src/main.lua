@@ -177,7 +177,13 @@ if PlayerInputComponent and PlayerInputComponent.registerActionEvents then
         if not (g_inputBinding and g_FuelCostsManager and g_FuelCostsManager.settingsPanel) then
             return
         end
-        if g_FuelCostsManager.settingsPanelEventId then return end
+        if g_FuelCostsManager.settingsPanelEventId then
+            local ok, _ = pcall(function()
+                return g_inputBinding:getActionEventDisplayName(g_FuelCostsManager.settingsPanelEventId)
+            end)
+            if ok then return end
+            g_FuelCostsManager.settingsPanelEventId = nil
+        end
 
         g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
 

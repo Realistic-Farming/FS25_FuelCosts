@@ -81,10 +81,12 @@ function FuelPriceEngine:onDayChanged(currentDay)
         end
     end
 
-    -- Clamp to [base * MIN, base * MAX], then apply difficulty
+    -- Clamp to [base*diffMult * MIN, base*diffMult * MAX]
+    -- Difficulty scales the center of the price band, not the rolling price,
+    -- so it never compounds across days.
     local C = FuelConstants.PRICE
-    self.currentPrice = math.max(base * C.MIN_MULTIPLIER, math.min(base * C.MAX_MULTIPLIER, self.currentPrice))
-    self.currentPrice = self.currentPrice * diffMult
+    local effectiveBase = base * diffMult
+    self.currentPrice = math.max(effectiveBase * C.MIN_MULTIPLIER, math.min(effectiveBase * C.MAX_MULTIPLIER, self.currentPrice))
 
     FuelLogger.debug("Day %d — fuel price: $%.4f/L", currentDay, self.currentPrice)
 

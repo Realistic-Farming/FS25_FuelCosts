@@ -51,6 +51,7 @@ local function onReadState(arr)
     if arr[1] ~= nil then pe.currentPrice  = arr[1] end
     if arr[2] ~= nil then pe.shockActive   = arr[2] end
     if arr[3] ~= nil then pe.shockDaysLeft = arr[3] end
+    pe:applyToFillTypes()
 end
 
 -- Server: push the current price immediately (called from _broadcastPrice on a day

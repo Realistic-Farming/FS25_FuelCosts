@@ -49,12 +49,12 @@ function FuelPriceEngine:onDayChanged(currentDay)
     local swing = (math.random() * 2 - 1) * volRate
     self.currentPrice = self.currentPrice * (1 + swing)
 
-    -- Seasonal modifier
+    -- Seasonal modifier (applied to base, not currentPrice, to prevent compounding)
+    local seasonMod = 1.0
     if self.settings.seasonalEffects then
         local season = g_currentMission and g_currentMission.environment
             and g_currentMission.environment.currentSeason or 2
-        local seasonMod = FuelConstants.SEASONAL[season] or 1.0
-        self.currentPrice = self.currentPrice * seasonMod
+        seasonMod = FuelConstants.SEASONAL[season] or 1.0
     end
 
     -- Market shock
@@ -81,10 +81,12 @@ function FuelPriceEngine:onDayChanged(currentDay)
         end
     end
 
-    -- Clamp to [base * MIN, base * MAX], then apply difficulty
+    -- Clamp to [effectiveBase * MIN, effectiveBase * MAX]
+    -- Difficulty and season scale the center of the price band, not the rolling price,
+    -- so neither compounds across days.
     local C = FuelConstants.PRICE
-    self.currentPrice = math.max(base * C.MIN_MULTIPLIER, math.min(base * C.MAX_MULTIPLIER, self.currentPrice))
-    self.currentPrice = self.currentPrice * diffMult
+    local effectiveBase = base * diffMult * seasonMod
+    self.currentPrice = math.max(effectiveBase * C.MIN_MULTIPLIER, math.min(effectiveBase * C.MAX_MULTIPLIER, self.currentPrice))
 
     FuelLogger.debug("Day %d — fuel price: $%.4f/L", currentDay, self.currentPrice)
 

@@ -284,10 +284,21 @@ function FuelSettingsPanel:requestChange(id, value)
     end
 
     self.manager.settings[id] = value
-    -- Re-apply fill types immediately if price-affecting setting changed
-    if id == "enabled" or id == "difficulty" or id == "baseFuelPrice" then
+    -- Handle price-affecting settings immediately
+    if id == "enabled" then
+        if not value and self.manager.priceEngine then
+            self.manager.priceEngine:restoreOriginalPrices()
+        end
+    elseif id == "difficulty" or id == "baseFuelPrice" then
         if self.manager.priceEngine then
-            self.manager.priceEngine:applyToFillTypes()
+            local pe = self.manager.priceEngine
+            local base = self.manager.settings.baseFuelPrice
+            local diffMult = self.manager.settings:getDifficultyMultiplier()
+            local effectiveBase = base * diffMult
+            local C = FuelConstants.PRICE
+            pe.currentPrice = math.max(effectiveBase * C.MIN_MULTIPLIER,
+                                       math.min(effectiveBase * C.MAX_MULTIPLIER, effectiveBase))
+            pe:applyToFillTypes()
         end
     end
     self.manager:save()

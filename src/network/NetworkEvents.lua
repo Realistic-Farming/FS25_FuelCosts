@@ -46,6 +46,7 @@ function FuelPriceSyncEvent:run(connection)
         pe.currentPrice  = self.currentPrice
         pe.shockActive   = self.shockActive
         pe.shockDaysLeft = self.shockDaysLeft
+        pe:applyToFillTypes()
         FuelLogger.debug("Price sync received: $%.4f/L", self.currentPrice)
     end
 end

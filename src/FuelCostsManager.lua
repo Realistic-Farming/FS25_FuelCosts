@@ -191,6 +191,11 @@ end
 
 function FuelCostsManager:_broadcastPrice()
     if g_server == nil then return end
+    -- Delegate to NetworkSync when it is present (full price snapshot); otherwise fall
+    -- back to the own broadcast event exactly as before.
+    if FuelNetworkSyncBridge ~= nil and FuelNetworkSyncBridge.syncNow() then
+        return
+    end
     local pe = self.priceEngine
     g_server:broadcastEvent(
         FuelPriceSyncEvent.new(pe.currentPrice, pe.shockActive, pe.shockDaysLeft)

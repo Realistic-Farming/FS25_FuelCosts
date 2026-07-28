@@ -16,6 +16,7 @@
 
 ## Near-term (next release cycle)
 - [ ] Keep the price-read API stable for consumers: getDisplayPrice(), getTrend(), getPriceStatus() are the contract; do not rename.
+- [x] 2026-07-26 bug sweep: FC-001 (compounding multiplier) and FC-006 (MP sync multiplier placement) fixed and merged to main.
 
 ## Mid-term (this season)
 - [x] Bedrock migration scope DECIDED and built: adopted all four engines (StateLedger + NetworkSync + MasterHUD + SettingsHub, delegate-when-present; commits 3a9ef4b + 03d22e8). Price stays a no-addMoney oracle. Whole-wave two-machine MP test still owed.

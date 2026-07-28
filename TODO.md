@@ -9,7 +9,7 @@
 - [ ] Confirm the price-read API surface (getDisplayPrice/getTrend/getPriceStatus) is what consumers (DairyCore) need.
 
 ## Bugs
-- [ ] None from the audit. Charging rides the base-game fill path (no custom hook), so no MP double-charge.
+- [x] 2026-07-26 bug sweep: FuelCosts bugs fixed and merged to main. FC-001 (compounding multiplier on rolling price) and FC-006 (MP sync applying multiplier to rolling instead of base) fixed. Applied multiplier to `effectiveBase` in clamp range. All closed.
 
 ## Features / enhancements
 - [ ] None scheduled. The daily price update works as designed.

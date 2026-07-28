@@ -212,8 +212,6 @@
     </actions>
 
     <inputBinding>
-        <actionBinding action="FC_OPEN_SETTINGS">
-            <binding device="KB_MOUSE_DEFAULT" input="KEY_lshift KEY_f" />
-        </actionBinding>
+        <actionBinding action="FC_OPEN_SETTINGS" />
     </inputBinding>
 </modDesc>

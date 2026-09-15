@@ -58,6 +58,7 @@ source(modDirectory .. "src/network/NetworkEvents.lua")
 -- Phase 5 - Manager (depends on all of the above)
 -- -------------------------------------------------------
 source(modDirectory .. "src/FuelCostsManager.lua")
+source(modDirectory .. "src/FuelContextInput.lua")
 
 -- -------------------------------------------------------
 -- Phase 6 - Bedrock bridges (optional, delegate-when-present)
@@ -77,6 +78,70 @@ local function isEnabled()
 end
 
 -- -------------------------------------------------------
+-- Input action registration (RSF-F201 context-qualified)
+-- FC_OPEN_SETTINGS opens the settings panel from both contexts. FC_TOGGLE_HUD and
+-- FC_HUD_EDIT stay PLAYER-only and register only while MasterHUD is absent (with
+-- MasterHUD installed they must not register at all, see the file header).
+--
+-- Each context registers through its own private forwarding target. The engine
+-- keys an event by action, target and trigger shape only, so the old shared
+-- g_FuelCostsManager target made the PLAYER and VEHICLE FC_OPEN_SETTINGS
+-- registrations one global slot that every cab rebuild wiped. Membership is
+-- asked of the wrap's own context by walking the native lists; a complete set
+-- costs no transaction. The hook record lives on the FuelCostsManager class
+-- table (unload() clears only the instance) and is never restored per mission.
+--
+-- The old getActionEventDisplayName probe is gone: that getter does not exist
+-- in the engine, so its pcall always failed and the stored id was nil'd on
+-- every player callback.
+-- -------------------------------------------------------
+local inputRecord = FuelContextInput.record(FuelCostsManager, "_f201Input")
+
+local function hasSettingsPanel(owner) return owner.settingsPanel ~= nil end
+local function ownsHudKeys() return not __rfMhOwnsHudKeys() end
+local function hideRow(binding, eventId) binding:setActionEventTextVisibility(eventId, false) end
+local function labelToggle(binding, eventId)
+    binding:setActionEventText(eventId,
+        (g_i18n ~= nil and g_i18n:getText("input_FC_TOGGLE_HUD")) or "Toggle Fuel HUD")
+end
+local function labelEdit(binding, eventId)
+    binding:setActionEventText(eventId,
+        (g_i18n ~= nil and g_i18n:getText("input_FC_HUD_EDIT")) or "Move Fuel HUD")
+end
+
+local FC_PLAYER_SPECS = {
+    { action = "FC_OPEN_SETTINGS", handler = "onOpenSettingsInput", idField = "settingsPanelEventId",
+      present = hasSettingsPanel, after = hideRow, up = false, down = true, always = false, startActive = true },
+    { action = "FC_TOGGLE_HUD", handler = "onToggleHUDInput", idField = "toggleHudEventId",
+      present = ownsHudKeys, after = labelToggle, up = false, down = true, always = false, startActive = true },
+    { action = "FC_HUD_EDIT", handler = "onHUDEditInput", idField = "hudEditEventId",
+      present = ownsHudKeys, after = labelEdit, up = false, down = true, always = false, startActive = true },
+}
+
+-- Cab set is FC_OPEN_SETTINGS only. Do not add the HUD hide/move actions here.
+local FC_VEHICLE_SPECS = {
+    { action = "FC_OPEN_SETTINGS", handler = "onOpenSettingsInput", idField = "vehicleSettingsPanelEventId",
+      present = hasSettingsPanel, after = hideRow, up = false, down = true, always = false, startActive = true },
+}
+
+-- Installed once per loaded script environment, at module load, so the PLAYER
+-- wrapper is in place before the first registerActionEvents fires.
+if FuelContextInput.installPlayerWrapper(inputRecord, FC_PLAYER_SPECS) then
+    FuelLogger.info("PlayerInputComponent hook installed for FC_OPEN_SETTINGS")
+end
+if FuelContextInput.installVehicleWrapper(inputRecord, FC_VEHICLE_SPECS) then
+    FuelLogger.info("InputBinding hook installed for VEHICLE context")
+end
+
+local function activateInput(mission)
+    if fcm == nil or PlayerInputComponent == nil or Vehicle == nil then return end
+    FuelContextInput.activate(inputRecord, fcm, mission, {
+        [PlayerInputComponent.INPUT_CONTEXT_NAME] = FC_PLAYER_SPECS,
+        [Vehicle.INPUT_CONTEXT_NAME]              = FC_VEHICLE_SPECS,
+    })
+end
+
+-- -------------------------------------------------------
 -- Mission00.load  (create manager)
 -- -------------------------------------------------------
 local function load(mission)
@@ -90,6 +155,9 @@ local function load(mission)
         getfenv(0)["g_FuelCostsManager"] = fcm
         mission.fuelCostsManager = fcm
     end
+    -- RSF-F201: bind this manager as input owner of the mission and mint fresh
+    -- per-context forwarding targets. A stacked reload copy adopts the binding.
+    activateInput(mission)
 end
 
 -- -------------------------------------------------------
@@ -122,12 +190,20 @@ local function loadedMission(mission, node)
     if g_client ~= nil and g_server == nil and not FuelNetworkSyncBridge.active then
         g_client:getServerConnection():sendEvent(FuelRequestSyncEvent.new())
     end
+
+    -- RSF-F201 post-load catch-up: one PLAYER reconciliation if the local owning
+    -- player and the native PLAYER context already exist. Also retires this
+    -- mod's own HUD hide/move rows now that MasterHUD (if present) is published.
+    FuelContextInput.catchUpPlayer(inputRecord, FC_PLAYER_SPECS)
 end
 
 -- -------------------------------------------------------
 -- FSBaseMission.delete  (cleanup)
 -- -------------------------------------------------------
 local function unload()
+    -- RSF-F201: retire the input owner first. Old targets go inert; the captured
+    -- predecessors stay installed so no neighbour's wrapper is unhooked.
+    FuelContextInput.retire(inputRecord)
     if fcm ~= nil then
         fcm:delete()
         fcm = nil
@@ -196,6 +272,8 @@ Mission00.loadMission00Finished = Utils.appendedFunction(
 FSBaseMission.delete            = Utils.prependedFunction(FSBaseMission.delete,            unload)
 
 FSBaseMission.update = Utils.appendedFunction(FSBaseMission.update, function(mission, dt)
+    -- RSF-F201: admission reset is the first input act of every update interval.
+    FuelContextInput.resetAdmission(inputRecord)
     if fcm then fcm:update(dt) end
 end)
 
@@ -265,119 +343,6 @@ if not FcMouseHandlerRegistered then
 end
 FuelLogger.info("Mouse routing bound (reload-safe, live-resolved manager)")
 
--- -------------------------------------------------------
--- Input action registration - FC_OPEN_SETTINGS opens settings panel (player-assigned key)
--- Hook PlayerInputComponent.registerActionEvents so our
--- action is registered whenever the player spawns/respawns.
--- -------------------------------------------------------
-if PlayerInputComponent and PlayerInputComponent.registerActionEvents then
-    local _originalRegister = PlayerInputComponent.registerActionEvents
-    PlayerInputComponent.registerActionEvents = function(inputComponent, ...)
-        _originalRegister(inputComponent, ...)
-
-        if not (g_inputBinding and g_FuelCostsManager and g_FuelCostsManager.settingsPanel) then
-            return
-        end
-        if g_FuelCostsManager.settingsPanelEventId then
-            local ok, _ = pcall(function()
-                return g_inputBinding:getActionEventDisplayName(g_FuelCostsManager.settingsPanelEventId)
-            end)
-            if ok then return end
-            g_FuelCostsManager.settingsPanelEventId = nil
-        end
-
-        g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
-
-        local ok, evId = g_inputBinding:registerActionEvent(
-            InputAction.FC_OPEN_SETTINGS,
-            g_FuelCostsManager,
-            g_FuelCostsManager.onOpenSettingsInput,
-            false, true, false, true
-        )
-        if ok and evId then
-            g_FuelCostsManager.settingsPanelEventId = evId
-            g_inputBinding:setActionEventTextVisibility(evId, false)
-            FuelLogger.info("Settings panel (FC_OPEN_SETTINGS) registered in PLAYER context")
-        end
-
-        -- Per-mod HUD hide / move, so Fuel works standalone without MasterHUD.
-        -- Both callbacks stand down on their own when MasterHUD is installed.
-        local tOk, tId = false, nil
-        if not __rfMhOwnsHudKeys() then
-            local tOk, tId = g_inputBinding:registerActionEvent(
-                InputAction.FC_TOGGLE_HUD,
-                g_FuelCostsManager,
-                g_FuelCostsManager.onToggleHUDInput,
-                false, true, false, true
-            )
-        end
-        if tOk and tId then
-            g_inputBinding:setActionEventText(tId,
-                (g_i18n ~= nil and g_i18n:getText("input_FC_TOGGLE_HUD")) or "Toggle Fuel HUD")
-            FuelLogger.info("HUD toggle (FC_TOGGLE_HUD) registered in PLAYER context")
-        end
-
-        local eOk, eId = false, nil
-        if not __rfMhOwnsHudKeys() then
-            local eOk, eId = g_inputBinding:registerActionEvent(
-                InputAction.FC_HUD_EDIT,
-                g_FuelCostsManager,
-                g_FuelCostsManager.onHUDEditInput,
-                false, true, false, true
-            )
-        end
-        if eOk and eId then
-            g_inputBinding:setActionEventText(eId,
-                (g_i18n ~= nil and g_i18n:getText("input_FC_HUD_EDIT")) or "Move Fuel HUD")
-            FuelLogger.info("HUD move/edit (FC_HUD_EDIT) registered in PLAYER context")
-        end
-
-        g_inputBinding:endActionEventsModification()
-    end
-    FuelLogger.info("PlayerInputComponent hook installed for FC_OPEN_SETTINGS")
-end
-
--- -------------------------------------------------------
--- Vehicle context - hook InputBinding.endActionEventsModification
--- (Vehicle.registerActionEvents is already copied to each instance
---  at spawn time and can't be patched after vehicles exist.)
--- -------------------------------------------------------
-if InputBinding and InputBinding.endActionEventsModification then
-    local _fcVehicleHookActive = false
-    local _originalEndMod = InputBinding.endActionEventsModification
-    InputBinding.endActionEventsModification = function(binding, ignoreCheck)
-        local contextName = ""
-        if binding.registrationContext and
-           binding.registrationContext ~= InputBinding.NO_REGISTRATION_CONTEXT then
-            contextName = binding.registrationContext.name or ""
-        end
-
-        _originalEndMod(binding, ignoreCheck)
-
-        if contextName ~= Vehicle.INPUT_CONTEXT_NAME then return end
-        if _fcVehicleHookActive then return end
-        if not (g_FuelCostsManager and g_FuelCostsManager.settingsPanel) then return end
-
-        _fcVehicleHookActive = true
-        binding:beginActionEventsModification(Vehicle.INPUT_CONTEXT_NAME)
-
-        local ok, evId = binding:registerActionEvent(
-            InputAction.FC_OPEN_SETTINGS,
-            g_FuelCostsManager,
-            g_FuelCostsManager.onOpenSettingsInput,
-            false, true, false, true
-        )
-        if ok and evId then
-            g_FuelCostsManager.vehicleSettingsPanelEventId = evId
-            binding:setActionEventTextVisibility(evId, false)
-            FuelLogger.info("Settings panel (FC_OPEN_SETTINGS) registered in VEHICLE context")
-        end
-
-        binding:endActionEventsModification()
-        _fcVehicleHookActive = false
-    end
-    FuelLogger.info("InputBinding hook installed for VEHICLE context")
-end
 
 print("========================================")
 print("  FS25 Realistic Fuel Costs LOADED      ")

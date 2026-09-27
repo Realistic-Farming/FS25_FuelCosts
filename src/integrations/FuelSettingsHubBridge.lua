@@ -24,13 +24,43 @@ FuelSettingsHubBridge = FuelSettingsHubBridge or {}
 -- FarmTablet renders the label string as-is (no l10n lookup on its end), so resolve
 -- each setting's human-readable name here from its "<uiId>_short" key, falling back
 -- to the uiId if it is not translated.
+-- BUILD 17:48 (George CLOSED DESIGN 17:40 item 3): the human names, because the tablet renders
+-- this string as-is and the mod shipped no _short key for any of them, so every row read as its
+-- raw uiId: "fc_enabled", "fc_basePrice". Keyed by SCHEMA ID, which is stable, rather than by uiId.
+local HUMAN_LABEL = {
+    enabled           = "Fuel Costs Enabled",
+    baseFuelPrice     = "Base Fuel Price",
+    difficulty        = "Difficulty",
+    priceVolatility   = "Price Volatility",
+    seasonalEffects   = "Seasonal Effects",
+    marketShocks      = "Market Shocks",
+    showNotifications = "Show Notifications",
+    hudEnabled        = "HUD Enabled",
+    hudPosition       = "HUD Position",
+    debugMode         = "Debug Mode",
+}
+
+--- A ladder, so a real translation always beats a hardcoded English one.
+--- 1. "<uiId>_short", which is what this mod's l10n now carries.
+--- 2. "fc_setting_<id>". The mod already had fc_setting_enabled translated into 26 languages, and
+---    going straight to the table would have thrown that away for the one setting that has one.
+--- 3. The table above, which is correct English for every setting in the schema.
+--- 4. The raw uiId, which is what the player used to see and is now only a last resort.
 local function resolveLabel(def)
     local base = def.uiId or def.id
     if g_i18n ~= nil and g_i18n.hasText ~= nil then
-        local key = base .. "_short"
-        if g_i18n:hasText(key) then
-            return g_i18n:getText(key)
+        for _, key in ipairs({ base .. "_short", "fc_setting_" .. tostring(def.id) }) do
+            if g_i18n:hasText(key) then
+                local text = g_i18n:getText(key)
+                if type(text) == "string" and text ~= "" then
+                    return text
+                end
+            end
         end
+    end
+    local human = HUMAN_LABEL[def.id]
+    if type(human) == "string" and human ~= "" then
+        return human
     end
     return base
 end

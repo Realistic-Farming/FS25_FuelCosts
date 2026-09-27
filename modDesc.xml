@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="106">
     <author>TisonK</author>
-    <version>1.0.0.1</version>
+    <version>1.0.0.2</version>
     <modName>FS25_FuelCosts</modName>
     <title>
         <en>Realistic Fuel Costs</en>
@@ -173,6 +173,286 @@
             <fc>启用燃料成本</fc>
             <id>Aktifkan biaya bahan bakar</id>
             <vi>Bật chi phí nhiên liệu</vi>
+        </text>
+        <text name="fc_enabled_short">
+            <en>Fuel Costs Enabled</en>
+            <de>Fuel Costs Enabled</de>
+            <fr>Fuel Costs Enabled</fr>
+            <nl>Fuel Costs Enabled</nl>
+            <it>Fuel Costs Enabled</it>
+            <pl>Fuel Costs Enabled</pl>
+            <es>Fuel Costs Enabled</es>
+            <ea>Fuel Costs Enabled</ea>
+            <pt>Fuel Costs Enabled</pt>
+            <br>Fuel Costs Enabled</br>
+            <ru>Fuel Costs Enabled</ru>
+            <uk>Fuel Costs Enabled</uk>
+            <cz>Fuel Costs Enabled</cz>
+            <hu>Fuel Costs Enabled</hu>
+            <ro>Fuel Costs Enabled</ro>
+            <tr>Fuel Costs Enabled</tr>
+            <fi>Fuel Costs Enabled</fi>
+            <no>Fuel Costs Enabled</no>
+            <sv>Fuel Costs Enabled</sv>
+            <da>Fuel Costs Enabled</da>
+            <kr>Fuel Costs Enabled</kr>
+            <jp>Fuel Costs Enabled</jp>
+            <ct>Fuel Costs Enabled</ct>
+            <fc>Fuel Costs Enabled</fc>
+            <id>Fuel Costs Enabled</id>
+            <vi>Fuel Costs Enabled</vi>
+        </text>
+        <text name="fc_basePrice_short">
+            <en>Base Fuel Price</en>
+            <de>Base Fuel Price</de>
+            <fr>Base Fuel Price</fr>
+            <nl>Base Fuel Price</nl>
+            <it>Base Fuel Price</it>
+            <pl>Base Fuel Price</pl>
+            <es>Base Fuel Price</es>
+            <ea>Base Fuel Price</ea>
+            <pt>Base Fuel Price</pt>
+            <br>Base Fuel Price</br>
+            <ru>Base Fuel Price</ru>
+            <uk>Base Fuel Price</uk>
+            <cz>Base Fuel Price</cz>
+            <hu>Base Fuel Price</hu>
+            <ro>Base Fuel Price</ro>
+            <tr>Base Fuel Price</tr>
+            <fi>Base Fuel Price</fi>
+            <no>Base Fuel Price</no>
+            <sv>Base Fuel Price</sv>
+            <da>Base Fuel Price</da>
+            <kr>Base Fuel Price</kr>
+            <jp>Base Fuel Price</jp>
+            <ct>Base Fuel Price</ct>
+            <fc>Base Fuel Price</fc>
+            <id>Base Fuel Price</id>
+            <vi>Base Fuel Price</vi>
+        </text>
+        <text name="fc_difficulty_short">
+            <en>Difficulty</en>
+            <de>Difficulty</de>
+            <fr>Difficulty</fr>
+            <nl>Difficulty</nl>
+            <it>Difficulty</it>
+            <pl>Difficulty</pl>
+            <es>Difficulty</es>
+            <ea>Difficulty</ea>
+            <pt>Difficulty</pt>
+            <br>Difficulty</br>
+            <ru>Difficulty</ru>
+            <uk>Difficulty</uk>
+            <cz>Difficulty</cz>
+            <hu>Difficulty</hu>
+            <ro>Difficulty</ro>
+            <tr>Difficulty</tr>
+            <fi>Difficulty</fi>
+            <no>Difficulty</no>
+            <sv>Difficulty</sv>
+            <da>Difficulty</da>
+            <kr>Difficulty</kr>
+            <jp>Difficulty</jp>
+            <ct>Difficulty</ct>
+            <fc>Difficulty</fc>
+            <id>Difficulty</id>
+            <vi>Difficulty</vi>
+        </text>
+        <text name="fc_volatility_short">
+            <en>Price Volatility</en>
+            <de>Price Volatility</de>
+            <fr>Price Volatility</fr>
+            <nl>Price Volatility</nl>
+            <it>Price Volatility</it>
+            <pl>Price Volatility</pl>
+            <es>Price Volatility</es>
+            <ea>Price Volatility</ea>
+            <pt>Price Volatility</pt>
+            <br>Price Volatility</br>
+            <ru>Price Volatility</ru>
+            <uk>Price Volatility</uk>
+            <cz>Price Volatility</cz>
+            <hu>Price Volatility</hu>
+            <ro>Price Volatility</ro>
+            <tr>Price Volatility</tr>
+            <fi>Price Volatility</fi>
+            <no>Price Volatility</no>
+            <sv>Price Volatility</sv>
+            <da>Price Volatility</da>
+            <kr>Price Volatility</kr>
+            <jp>Price Volatility</jp>
+            <ct>Price Volatility</ct>
+            <fc>Price Volatility</fc>
+            <id>Price Volatility</id>
+            <vi>Price Volatility</vi>
+        </text>
+        <text name="fc_seasonal_short">
+            <en>Seasonal Effects</en>
+            <de>Seasonal Effects</de>
+            <fr>Seasonal Effects</fr>
+            <nl>Seasonal Effects</nl>
+            <it>Seasonal Effects</it>
+            <pl>Seasonal Effects</pl>
+            <es>Seasonal Effects</es>
+            <ea>Seasonal Effects</ea>
+            <pt>Seasonal Effects</pt>
+            <br>Seasonal Effects</br>
+            <ru>Seasonal Effects</ru>
+            <uk>Seasonal Effects</uk>
+            <cz>Seasonal Effects</cz>
+            <hu>Seasonal Effects</hu>
+            <ro>Seasonal Effects</ro>
+            <tr>Seasonal Effects</tr>
+            <fi>Seasonal Effects</fi>
+            <no>Seasonal Effects</no>
+            <sv>Seasonal Effects</sv>
+            <da>Seasonal Effects</da>
+            <kr>Seasonal Effects</kr>
+            <jp>Seasonal Effects</jp>
+            <ct>Seasonal Effects</ct>
+            <fc>Seasonal Effects</fc>
+            <id>Seasonal Effects</id>
+            <vi>Seasonal Effects</vi>
+        </text>
+        <text name="fc_shocks_short">
+            <en>Market Shocks</en>
+            <de>Market Shocks</de>
+            <fr>Market Shocks</fr>
+            <nl>Market Shocks</nl>
+            <it>Market Shocks</it>
+            <pl>Market Shocks</pl>
+            <es>Market Shocks</es>
+            <ea>Market Shocks</ea>
+            <pt>Market Shocks</pt>
+            <br>Market Shocks</br>
+            <ru>Market Shocks</ru>
+            <uk>Market Shocks</uk>
+            <cz>Market Shocks</cz>
+            <hu>Market Shocks</hu>
+            <ro>Market Shocks</ro>
+            <tr>Market Shocks</tr>
+            <fi>Market Shocks</fi>
+            <no>Market Shocks</no>
+            <sv>Market Shocks</sv>
+            <da>Market Shocks</da>
+            <kr>Market Shocks</kr>
+            <jp>Market Shocks</jp>
+            <ct>Market Shocks</ct>
+            <fc>Market Shocks</fc>
+            <id>Market Shocks</id>
+            <vi>Market Shocks</vi>
+        </text>
+        <text name="fc_notifications_short">
+            <en>Show Notifications</en>
+            <de>Show Notifications</de>
+            <fr>Show Notifications</fr>
+            <nl>Show Notifications</nl>
+            <it>Show Notifications</it>
+            <pl>Show Notifications</pl>
+            <es>Show Notifications</es>
+            <ea>Show Notifications</ea>
+            <pt>Show Notifications</pt>
+            <br>Show Notifications</br>
+            <ru>Show Notifications</ru>
+            <uk>Show Notifications</uk>
+            <cz>Show Notifications</cz>
+            <hu>Show Notifications</hu>
+            <ro>Show Notifications</ro>
+            <tr>Show Notifications</tr>
+            <fi>Show Notifications</fi>
+            <no>Show Notifications</no>
+            <sv>Show Notifications</sv>
+            <da>Show Notifications</da>
+            <kr>Show Notifications</kr>
+            <jp>Show Notifications</jp>
+            <ct>Show Notifications</ct>
+            <fc>Show Notifications</fc>
+            <id>Show Notifications</id>
+            <vi>Show Notifications</vi>
+        </text>
+        <text name="fc_hud_short">
+            <en>HUD Enabled</en>
+            <de>HUD Enabled</de>
+            <fr>HUD Enabled</fr>
+            <nl>HUD Enabled</nl>
+            <it>HUD Enabled</it>
+            <pl>HUD Enabled</pl>
+            <es>HUD Enabled</es>
+            <ea>HUD Enabled</ea>
+            <pt>HUD Enabled</pt>
+            <br>HUD Enabled</br>
+            <ru>HUD Enabled</ru>
+            <uk>HUD Enabled</uk>
+            <cz>HUD Enabled</cz>
+            <hu>HUD Enabled</hu>
+            <ro>HUD Enabled</ro>
+            <tr>HUD Enabled</tr>
+            <fi>HUD Enabled</fi>
+            <no>HUD Enabled</no>
+            <sv>HUD Enabled</sv>
+            <da>HUD Enabled</da>
+            <kr>HUD Enabled</kr>
+            <jp>HUD Enabled</jp>
+            <ct>HUD Enabled</ct>
+            <fc>HUD Enabled</fc>
+            <id>HUD Enabled</id>
+            <vi>HUD Enabled</vi>
+        </text>
+        <text name="fc_hudPosition_short">
+            <en>HUD Position</en>
+            <de>HUD Position</de>
+            <fr>HUD Position</fr>
+            <nl>HUD Position</nl>
+            <it>HUD Position</it>
+            <pl>HUD Position</pl>
+            <es>HUD Position</es>
+            <ea>HUD Position</ea>
+            <pt>HUD Position</pt>
+            <br>HUD Position</br>
+            <ru>HUD Position</ru>
+            <uk>HUD Position</uk>
+            <cz>HUD Position</cz>
+            <hu>HUD Position</hu>
+            <ro>HUD Position</ro>
+            <tr>HUD Position</tr>
+            <fi>HUD Position</fi>
+            <no>HUD Position</no>
+            <sv>HUD Position</sv>
+            <da>HUD Position</da>
+            <kr>HUD Position</kr>
+            <jp>HUD Position</jp>
+            <ct>HUD Position</ct>
+            <fc>HUD Position</fc>
+            <id>HUD Position</id>
+            <vi>HUD Position</vi>
+        </text>
+        <text name="fc_debug_short">
+            <en>Debug Mode</en>
+            <de>Debug Mode</de>
+            <fr>Debug Mode</fr>
+            <nl>Debug Mode</nl>
+            <it>Debug Mode</it>
+            <pl>Debug Mode</pl>
+            <es>Debug Mode</es>
+            <ea>Debug Mode</ea>
+            <pt>Debug Mode</pt>
+            <br>Debug Mode</br>
+            <ru>Debug Mode</ru>
+            <uk>Debug Mode</uk>
+            <cz>Debug Mode</cz>
+            <hu>Debug Mode</hu>
+            <ro>Debug Mode</ro>
+            <tr>Debug Mode</tr>
+            <fi>Debug Mode</fi>
+            <no>Debug Mode</no>
+            <sv>Debug Mode</sv>
+            <da>Debug Mode</da>
+            <kr>Debug Mode</kr>
+            <jp>Debug Mode</jp>
+            <ct>Debug Mode</ct>
+            <fc>Debug Mode</fc>
+            <id>Debug Mode</id>
+            <vi>Debug Mode</vi>
         </text>
         <text name="input_FC_OPEN_SETTINGS">
             <en>Open Fuel Costs Settings</en>

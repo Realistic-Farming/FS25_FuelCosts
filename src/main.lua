@@ -32,6 +32,7 @@ local modName      = FcModName
 -- -------------------------------------------------------
 -- Phase 1 - Utilities & Config
 -- -------------------------------------------------------
+source(modDirectory .. "src/utils/FcLiveKeyLabel.lua")
 source(modDirectory .. "src/utils/Logger.lua")
 source(modDirectory .. "src/config/Constants.lua")
 source(modDirectory .. "src/config/SettingsSchema.lua")

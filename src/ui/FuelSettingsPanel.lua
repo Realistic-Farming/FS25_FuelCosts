@@ -154,6 +154,20 @@ local SEASON_COLORS = {
 }
 
 -- ── Constructor ───────────────────────────────────────────
+-- ASH-153: displayed settings-close hint from live Controls chord.
+function FuelSettingsPanel.liveOpenSettingsLabel()
+    if FcLiveKeyLabel ~= nil and type(FcLiveKeyLabel.resolve) == "function" then
+        local label, kind = FcLiveKeyLabel.resolve("FC_OPEN_SETTINGS")
+        if type(label) == "string" and label ~= "" then
+            return label, kind
+        end
+    end
+    if FcLiveKeyLabel ~= nil and type(FcLiveKeyLabel.unavailableText) == "function" then
+        return FcLiveKeyLabel.unavailableText(), "unavailable"
+    end
+    return "unavailable", "unavailable"
+end
+
 function FuelSettingsPanel.new(manager)
     local self = setmetatable({}, FuelSettingsPanel_mt)
     self.manager      = manager
@@ -447,8 +461,11 @@ function FuelSettingsPanel:drawInfoBar()
     local textY = iy + IB_H * 0.28
     self:drawText(PX + PAD,          textY, TS_SMALL, adminText,          adminColor,  RenderText.ALIGN_LEFT,  true)
     self:drawText(PX + PAD + 0.10,   textY, TS_SMALL, "·  " .. modeText,  C.info_mode, RenderText.ALIGN_LEFT,  false)
-    local closeHint = "click X to close"
-    if g_FuelCostsManager and g_FuelCostsManager.settingsPanelEventId and g_inputBinding then
+    local liveLabel = FuelSettingsPanel.liveOpenSettingsLabel()
+    local closeHint = (liveLabel and liveLabel ~= "" and liveLabel ~= "unavailable")
+        and (liveLabel .. " to close") or "click X to close"
+    if closeHint == "click X to close" and g_FuelCostsManager
+        and g_FuelCostsManager.settingsPanelEventId and g_inputBinding then
         local ok, txt = pcall(function()
             return g_inputBinding:getActionEventDisplayName(g_FuelCostsManager.settingsPanelEventId)
         end)

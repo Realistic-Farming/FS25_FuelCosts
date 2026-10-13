@@ -13,6 +13,23 @@ the repo's git history and README.
 
 ## [Unreleased]
 
+## [1.1.0.0] - 2026-10-12
+
+> **This is not a final release.** It gives everyone, testers and players, new or returning, everything we have built so far, so nobody has to wait on an old version any longer. The Realistic Farming suite is far from done: we are still building and expanding every mod, and completing it could take months, possibly a year. Expect changes and rough edges along the way, and please report anything that looks wrong.
+
+### Added
+- A Fuel HUD show/hide toggle in the Control Center, and Control Center actions for Fuel Costs.
+- The Fuel HUD follows the base game's HUD theme and can be resized in width.
+
+### Changed
+- The economy dial uses the suite's shared option scaling.
+- Keyboard defaults are bound and no longer collide with other suite mods; the settings screen shows the live key.
+- Settings show their proper names in Settings Hub and the Farm Tablet instead of internal ids.
+
+### Fixed
+- Key presses are registered only where they belong (on foot or in a vehicle), and editing the HUD in the suite editor works again.
+- Mod reloads during development no longer leave stale hooks behind.
+
 ### Added
 - Changelog file established (suite ruling 2026-08-22).
 - Playtest fixes: FC_TOGGLE_HUD (RShift+U) and FC_HUD_EDIT (RShift+V) chords, manager/HUD/settings, vehicle input hook.

@@ -8,7 +8,7 @@
 -- =========================================================
 
 ---@class FuelCostsManager
-FuelCostsManager = {}
+FuelCostsManager = FuelCostsManager or {}
 FuelCostsManager.__index = FuelCostsManager
 
 function FuelCostsManager.new()
@@ -130,7 +130,7 @@ function FuelCostsManager:_updateRefuelDetection(dt)
                 self._fuelSessionAdded = 0
                 self._fuelStopTimer    = 0
                 FuelLogger.debug("Notif: refuel session STARTED (delta=%.2fL)", delta)
-                local modEnv  = g_modEnvironments and g_modEnvironments[g_currentModName]
+                local modEnv  = g_modEnvironments and g_modEnvironments[(FcModName or g_currentModName)]
                 local i18n    = (modEnv and modEnv.i18n) or g_i18n
                 local startMsg = (i18n and i18n:getText("fc_notification_refueling")) or "Refueling..."
                 self.hud:flash(startMsg, {0.55, 0.80, 0.95, 1.0}, 2.5)
@@ -151,7 +151,7 @@ function FuelCostsManager:_updateRefuelDetection(dt)
             FuelLogger.debug("Notif: refuel session ENDED — %.1fL added", self._fuelSessionAdded)
             if self._fuelSessionAdded > 0.1 then
                 local cost   = self._fuelSessionAdded * self.priceEngine:getDisplayPrice()
-                local modEnv = g_modEnvironments and g_modEnvironments[g_currentModName]
+                local modEnv = g_modEnvironments and g_modEnvironments[(FcModName or g_currentModName)]
                 local i18n   = (modEnv and modEnv.i18n) or g_i18n
                 local fmt    = (i18n and i18n:getText("fc_notification_fill")) or "Fuelled %.0fL — $%.2f"
                 self.hud:flash(string.format(fmt, self._fuelSessionAdded, cost))
@@ -240,6 +240,31 @@ end
 -- -------------------------------------------------------
 -- Settings panel
 -- -------------------------------------------------------
+
+function FuelCostsManager:onToggleHUDInput()
+    -- MasterHUD takeover: with MasterHUD installed it owns the suite-wide hide/move
+    -- binds, so this per-mod key is deliberately inert. Standalone, it runs.
+    if ((g_currentMission ~= nil and g_currentMission.masterHUD) or g_masterHUD) ~= nil then
+        return
+    end
+    if self.settings == nil then return end
+    self.settings.hudEnabled = not self.settings.hudEnabled
+    if self.hud ~= nil and self.hud.flash ~= nil then
+        self.hud:flash(self.settings.hudEnabled and "Fuel HUD shown" or "Fuel HUD hidden",
+            {0.55, 0.80, 0.95, 1.0}, 2.0)
+    end
+end
+
+function FuelCostsManager:onHUDEditInput()
+    -- MasterHUD takeover: with MasterHUD installed it owns the suite-wide hide/move
+    -- binds, so this per-mod key is deliberately inert. Standalone, it runs.
+    if ((g_currentMission ~= nil and g_currentMission.masterHUD) or g_masterHUD) ~= nil then
+        return
+    end
+    local hud = self.hud
+    if hud == nil then return end
+    if hud.editMode then hud:exitEditMode() else hud:enterEditMode() end
+end
 
 function FuelCostsManager:onOpenSettingsInput()
     if self.settingsPanel then

@@ -9,10 +9,10 @@
 -- =========================================================
 
 ---@class FuelSettingsPanel
-FuelSettingsPanel = {}
+FuelSettingsPanel = FuelSettingsPanel or {}
 local FuelSettingsPanel_mt = Class(FuelSettingsPanel)
 
-local FC_MOD_NAME = g_currentModName
+local FC_MOD_NAME = (FcModName or g_currentModName)
 
 local function tr(key, fallback)
     local modEnv = g_modEnvironments and g_modEnvironments[FC_MOD_NAME]
@@ -116,7 +116,7 @@ local SETTINGS_SECTIONS = {
 local MULTI_OPTS = {
     difficulty      = {"Simple", "Realistic", "Hardcore"},
     priceVolatility = {"None", "Low", "Medium", "High"},
-    hudPosition     = {"Top Left", "Top Right", "Bot Left", "Bot Right"},
+    hudPosition     = {"Suite Home", "Top Right", "Bot Left", "Bot Right"},
 }
 
 local SETTING_LABELS = {
@@ -154,12 +154,64 @@ local SEASON_COLORS = {
 }
 
 -- ── Constructor ───────────────────────────────────────────
+-- ASH-153: displayed settings-close hint from live Controls chord.
+--
+-- Cost, from the PR review: resolve() rebuilds the whole action-to-bindings map,
+-- and drawInfoBar called it once per frame while the panel was open. The only
+-- thing that can change the answer is a remap, and the engine publishes exactly
+-- that, so the answer is cached and refreshed on INPUT_BINDINGS_CHANGED. The
+-- subscription is released in FuelSettingsPanel:delete, so a second mission in
+-- one session does not leave a closure behind.
+local fcCachedLabel, fcCachedKind = nil, nil
+local fcLabelUnsubscribe = nil
+
+local function fcResolveOpenSettings()
+    if FcLiveKeyLabel ~= nil and type(FcLiveKeyLabel.resolve) == "function" then
+        local label, kind = FcLiveKeyLabel.resolve("FC_OPEN_SETTINGS")
+        if type(label) == "string" and label ~= "" then
+            return label, kind
+        end
+    end
+    if FcLiveKeyLabel ~= nil and type(FcLiveKeyLabel.unavailableText) == "function" then
+        return FcLiveKeyLabel.unavailableText(), "unavailable"
+    end
+    return "unavailable", "unavailable"
+end
+
+function FuelSettingsPanel.liveOpenSettingsLabel()
+    if fcCachedLabel == nil then
+        fcCachedLabel, fcCachedKind = fcResolveOpenSettings()
+        if fcLabelUnsubscribe == nil
+            and FcLiveKeyLabel ~= nil and type(FcLiveKeyLabel.subscribe) == "function" then
+            fcLabelUnsubscribe = FcLiveKeyLabel.subscribe(FuelSettingsPanel, function()
+                fcCachedLabel, fcCachedKind = nil, nil
+            end)
+        end
+        if fcLabelUnsubscribe == nil then
+            -- No message centre to tell us about a remap, so a cache could
+            -- outlive one. Resolve per call instead: slower, but truthful.
+            local l, k = fcCachedLabel, fcCachedKind
+            fcCachedLabel, fcCachedKind = nil, nil
+            return l, k
+        end
+    end
+    return fcCachedLabel, fcCachedKind
+end
+
+function FuelSettingsPanel.releaseLiveOpenSettingsLabel()
+    if fcLabelUnsubscribe ~= nil then
+        pcall(fcLabelUnsubscribe)
+        fcLabelUnsubscribe = nil
+    end
+    fcCachedLabel, fcCachedKind = nil, nil
+end
+
 function FuelSettingsPanel.new(manager)
     local self = setmetatable({}, FuelSettingsPanel_mt)
     self.manager      = manager
     self.fillOverlay  = nil
     self.isVisible    = false
-    local mod = g_modManager and g_modManager:getModByName(g_currentModName)
+    local mod = g_modManager and g_modManager:getModByName((FcModName or g_currentModName))
     self.modVersion   = "v" .. (mod and mod.version or "?")
     self.activeTab    = TAB_FUEL
     self.mouseX       = 0
@@ -181,6 +233,7 @@ function FuelSettingsPanel:initialize()
 end
 
 function FuelSettingsPanel:delete()
+    FuelSettingsPanel.releaseLiveOpenSettingsLabel()
     if self.fillOverlay then
         delete(self.fillOverlay)
         self.fillOverlay = nil
@@ -431,6 +484,21 @@ function FuelSettingsPanel:drawTabBar()
 end
 
 -- ── Info bar ──────────────────────────────────────────────
+--- Text for the panel's close hint.
+--- The imperative is gated on resolver kind "live" and nothing else. Testing the
+--- LABEL against the English literal "unavailable" let every other status
+--- through, so an unbound key read "Unbound to close" and a German missing API
+--- read "nicht verfuegbar to close". Any non-live kind, and an absent helper,
+--- keep the panel's own control-naming fallback.
+---@return string
+function FuelSettingsPanel.closeHintText()
+    local liveLabel, liveKind = FuelSettingsPanel.liveOpenSettingsLabel()
+    if liveKind == "live" and type(liveLabel) == "string" and liveLabel ~= "" then
+        return liveLabel .. " to close"
+    end
+    return "click X to close"
+end
+
 function FuelSettingsPanel:drawInfoBar()
     local iy = PY
     self:drawRect(PX, iy, PW, IB_H, C.info_bg)
@@ -447,8 +515,9 @@ function FuelSettingsPanel:drawInfoBar()
     local textY = iy + IB_H * 0.28
     self:drawText(PX + PAD,          textY, TS_SMALL, adminText,          adminColor,  RenderText.ALIGN_LEFT,  true)
     self:drawText(PX + PAD + 0.10,   textY, TS_SMALL, "·  " .. modeText,  C.info_mode, RenderText.ALIGN_LEFT,  false)
-    local closeHint = "click X to close"
-    if g_FuelCostsManager and g_FuelCostsManager.settingsPanelEventId and g_inputBinding then
+    local closeHint = FuelSettingsPanel.closeHintText()
+    if closeHint == "click X to close" and g_FuelCostsManager
+        and g_FuelCostsManager.settingsPanelEventId and g_inputBinding then
         local ok, txt = pcall(function()
             return g_inputBinding:getActionEventDisplayName(g_FuelCostsManager.settingsPanelEventId)
         end)

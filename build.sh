@@ -31,6 +31,7 @@ if command -v zip &>/dev/null; then
         --exclude "./*.sh" \
         --exclude "./*.py" \
         --exclude "./.claude/*" \
+        --exclude "./.git" \
         --exclude "./.git/*" \
         --exclude "./*.md" \
         --exclude "./CLAUDE.md" \
@@ -48,15 +49,17 @@ else
     elif command -v py &>/dev/null; then PYTHON_CMD="py"
     else echo "ERROR: no Python found (need python3 or py)"; exit 1
     fi
-    $PYTHON_CMD - <<'PYEOF'
+    MOD_NAME="$MOD_NAME" $PYTHON_CMD - <<'PYEOF'
 import zipfile, os, sys
 
 MOD_DIR = os.getcwd()
-ZIP_PATH = os.path.join(os.path.dirname(MOD_DIR), os.path.basename(MOD_DIR) + ".zip")
+# Named after the mod, not the folder, so a build from a worktree or a renamed
+# clone writes the zip --deploy copies.
+ZIP_PATH = os.path.join(os.path.dirname(MOD_DIR), os.environ["MOD_NAME"] + ".zip")
 
 EXCLUDE_DIRS  = {".git", ".claude", "__MACOSX", "tools"}
 EXCLUDE_EXTS  = {".sh", ".py", ".md", ".DS_Store", ".zip", ".png", ".txt"}
-EXCLUDE_FILES = {".gitignore"}
+EXCLUDE_FILES = {".git", ".gitignore"}  # ".git" is a FILE in a git worktree
 
 with zipfile.ZipFile(ZIP_PATH, "w", zipfile.ZIP_DEFLATED) as zf:
     for root, dirs, files in os.walk(MOD_DIR):

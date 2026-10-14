@@ -34,3 +34,9 @@
 - [x] `modDesc.xml`: FC_OPEN_SETTINGS on Right Shift + F, FC_HUD_EDIT on Right Shift + minus; `src/ui/FuelSettingsPanel.lua` reads the live key through `src/utils/FcLiveKeyLabel.lua` (new, sourced in `src/main.lua`).
 - [ ] Open Fuel Settings works on foot but not in a cab (FC-23, TESTING row 18): not traced yet.
 - [~] In game (owed): TESTING row 534.
+
+## 2026-10-14 (Fred (via Desk)): build packaging (MAINTENANCE row 313)
+
+- [x] `build.sh`: keeps the `.git` file out of the zip on both paths, and its Python fallback (taken when there is no `zip` command, as in Git Bash) names the zip `FS25_FuelCosts.zip` instead of after the folder, so `--deploy` copies the zip it just built rather than a missing or stale one.
+- [x] Built from a worktree (Python fallback; this machine's Git Bash has no `zip`) before and after this change: development wrote `bf-FuelCosts.zip`, named after the folder, with 21 entries, one of them the worktree `.git` file; this branch writes `FS25_FuelCosts.zip` with 20, exactly that file removed, every other entry byte-identical (CRC), nothing added. The `zip` command path gets the same `.git` exclusion but was not run here.
+- Build tooling only, no in-game check (TESTING row 575).

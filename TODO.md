@@ -28,3 +28,9 @@
 
 ## Blocked / waiting on
 - [x] Bedrock migration DONE - all four bridges built (commits 3a9ef4b + 03d22e8). Only the whole-wave two-machine MP test remains.
+
+## 2026-10-14 (Fred (via Desk)): keyboard defaults (Wizard, #26)
+
+- [x] `modDesc.xml`: FC_OPEN_SETTINGS on Right Shift + F, FC_HUD_EDIT on Right Shift + minus; `src/ui/FuelSettingsPanel.lua` reads the live key through `src/utils/FcLiveKeyLabel.lua` (new, sourced in `src/main.lua`).
+- [ ] Open Fuel Settings works on foot but not in a cab (FC-23, TESTING row 18): not traced yet.
+- [~] In game (owed): TESTING row 534.
